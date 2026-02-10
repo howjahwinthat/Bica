@@ -20,6 +20,7 @@ SET time_zone = "+00:00";
 --
 -- Database: `bica`
 --
+CREATE DATABASE bica;
 
 -- --------------------------------------------------------
 
