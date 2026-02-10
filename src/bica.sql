@@ -83,14 +83,33 @@ CREATE TABLE `sessions` (
 --
 -- Table structure for table `signups`
 --
+CREATE TABLE signups (
+  signup_id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  session_id INT NOT NULL,
+  student_id INT NOT NULL,
+  signup_status ENUM('signed_up','completed','no_show','cancelled') 
+      DEFAULT 'signed_up',
+  signed_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
-CREATE TABLE `signups` (
-  `signup_id` bigint(20) UNSIGNED NOT NULL,
-  `session_id` int(11) DEFAULT NULL,
-  `student_id` int(11) DEFAULT NULL,
-  `signup_status` varchar(20) DEFAULT NULL CHECK (`signup_status` in ('signed_up','completed','no_show','cancelled')),
-  `signed_at` timestamp NOT NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+  PRIMARY KEY (signup_id),
+
+  -- Prevent duplicate signups
+  UNIQUE KEY uq_session_student (session_id, student_id),
+
+  -- Foreign keys
+  CONSTRAINT fk_signup_session
+    FOREIGN KEY (session_id)
+    REFERENCES sessions(session_id)
+    ON DELETE CASCADE,
+
+  CONSTRAINT fk_signup_student
+    FOREIGN KEY (student_id)
+    REFERENCES students(student_id)
+    ON DELETE CASCADE
+) ENGINE=InnoDB
+  DEFAULT CHARSET=utf8mb4
+  COLLATE=utf8mb4_general_ci;
+
 
 -- --------------------------------------------------------
 
