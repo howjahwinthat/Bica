@@ -42,4 +42,4 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     if (!token) return;
 
-    const payload
+    const payload;
