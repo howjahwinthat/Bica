@@ -6,7 +6,6 @@ import { Label } from '@/app/components/ui/label';
 import { Card } from '@/app/components/ui/card';
 import { Checkbox } from '@/app/components/ui/checkbox';
 import { useAuth } from '@/app/context/AuthContext';
-import { mockAdmin } from '@/app/data/mockData';
 import { ArrowLeft, ShieldCheck } from 'lucide-react';
 
 export function AdminLogin() {
@@ -15,12 +14,33 @@ export function AdminLogin() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Mock login - in real app would validate credentials
-    login(mockAdmin);
-    navigate('/admin/dashboard');
+    setLoading(true);
+
+    try {
+      const response = await fetch('/api/admin/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
+
+      if (!response.ok) throw new Error('Invalid credentials');
+
+      const data = await response.json();
+
+      // Login in context
+      login(data.user, data.token, rememberMe);
+
+      navigate('/admin/dashboard');
+    } catch (err: any) {
+      console.error(err);
+      alert(err.message || 'Login failed');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -75,16 +95,13 @@ export function AdminLogin() {
                 checked={rememberMe}
                 onCheckedChange={(checked) => setRememberMe(checked as boolean)}
               />
-              <label
-                htmlFor="remember"
-                className="text-sm text-gray-600 cursor-pointer"
-              >
+              <label htmlFor="remember" className="text-sm text-gray-600 cursor-pointer">
                 Remember me
               </label>
             </div>
 
-            <Button type="submit" className="w-full bg-purple-600 hover:bg-purple-700">
-              Sign In
+            <Button type="submit" className="w-full bg-purple-600 hover:bg-purple-700" disabled={loading}>
+              {loading ? 'Logging in...' : 'Sign In'}
             </Button>
           </form>
         </Card>
