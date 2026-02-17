@@ -7,6 +7,7 @@ import { StudyDetails } from "@/app/components/student/StudyDetails";
 import { AdminLogin } from "@/app/components/admin/AdminLogin";
 import { AdminDashboard } from "@/app/components/admin/AdminDashboard";
 import { CreateEditStudy } from "@/app/components/admin/CreateEditStudy";
+import { ProtectedRoute } from "@/app/components/ProtectedRoute";
 
 export const router = createBrowserRouter([
   {
@@ -23,11 +24,19 @@ export const router = createBrowserRouter([
   },
   {
     path: "/student/dashboard",
-    Component: StudentDashboard,
+    Component: () => (
+      <ProtectedRoute role="student">
+        <StudentDashboard />
+      </ProtectedRoute>
+    ),
   },
   {
     path: "/student/study/:id",
-    Component: StudyDetails,
+    Component: () => (
+      <ProtectedRoute role="student">
+        <StudyDetails />
+      </ProtectedRoute>
+    ),
   },
   {
     path: "/admin/login",
@@ -35,14 +44,26 @@ export const router = createBrowserRouter([
   },
   {
     path: "/admin/dashboard",
-    Component: AdminDashboard,
+    Component: () => (
+      <ProtectedRoute role="admin">
+        <AdminDashboard />
+      </ProtectedRoute>
+    ),
   },
   {
     path: "/admin/study/new",
-    Component: CreateEditStudy,
+    Component: () => (
+      <ProtectedRoute role="admin">
+        <CreateEditStudy />
+      </ProtectedRoute>
+    ),
   },
   {
     path: "/admin/study/:id/edit",
-    Component: CreateEditStudy,
+    Component: () => (
+      <ProtectedRoute role="admin">
+        <CreateEditStudy />
+      </ProtectedRoute>
+    ),
   },
 ]);
