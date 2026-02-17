@@ -5,12 +5,12 @@ import { Input } from '@/app/components/ui/input';
 import { Label } from '@/app/components/ui/label';
 import { Card } from '@/app/components/ui/card';
 import { Checkbox } from '@/app/components/ui/checkbox';
-import { useAuth } from '@/app/context/AuthContext';
+import { AuthProivder } from '@/app/context/AuthContext';
 import { ArrowLeft, ShieldCheck } from 'lucide-react';
 
 export function AdminLogin() {
   const navigate = useNavigate();
-  const { login, user } = useAuth();
+  const { login, user } = AuthProvider();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
