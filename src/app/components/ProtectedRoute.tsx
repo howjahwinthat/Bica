@@ -1,6 +1,6 @@
 import { ReactNode, useEffect, useState } from 'react';
 import { Navigate } from 'react-router';
-import { useAuth } from '@/app/context/AuthContext';
+import { AuthProvider } from '@/app/context/AuthContext';
 
 interface ProtectedRouteProps {
   role: 'student' | 'admin' | 'researcher';
@@ -9,7 +9,7 @@ interface ProtectedRouteProps {
 }
 
 export function ProtectedRoute({ role, children, redirectTo = '/' }: ProtectedRouteProps) {
-  const { user } = useAuth();
+  const { user } = AuthProvider();
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
