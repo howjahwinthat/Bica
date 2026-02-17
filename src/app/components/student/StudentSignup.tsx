@@ -4,12 +4,12 @@ import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
 import { Label } from '@/app/components/ui/label';
 import { Card } from '@/app/components/ui/card';
-import { useAuth } from '@/app/context/AuthContext';
+import { AuthProivder } from '@/app/context/AuthContext';
 import { ArrowLeft } from 'lucide-react';
 
 export function StudentSignup() {
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { login } = AuthProvider();
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
