@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router';
 import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
@@ -10,34 +10,48 @@ import { ArrowLeft, ShieldCheck } from 'lucide-react';
 
 export function AdminLogin() {
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { login, user } = useAuth();
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  // 🔐 Auto-redirect if already logged in as admin
+  useEffect(() => {
+    if (user && user.role === 'admin') {
+      navigate('/admin/dashboard');
+    }
+  }, [user, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setError('');
 
     try {
-      const response = await fetch('/api/admin/login', {
+      const response = await fetch('http://localhost:5000/api/admin/login', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify({ email, password }),
       });
 
-      if (!response.ok) throw new Error('Invalid credentials');
-
       const data = await response.json();
 
-      // Login in context
+      if (!response.ok) {
+        throw new Error(data.message || 'Invalid credentials');
+      }
+
+      // ✅ Store token if remember me is checked
       login(data.user, data.token, rememberMe);
 
       navigate('/admin/dashboard');
     } catch (err: any) {
       console.error(err);
-      alert(err.message || 'Login failed');
+      setError(err.message || 'Login failed');
     } finally {
       setLoading(false);
     }
@@ -47,7 +61,10 @@ export function AdminLogin() {
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50 flex items-center justify-center p-4">
       <div className="max-w-md w-full">
         <div className="mb-6">
-          <Link to="/" className="inline-flex items-center text-purple-600 hover:text-purple-700">
+          <Link
+            to="/"
+            className="inline-flex items-center text-purple-600 hover:text-purple-700"
+          >
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back to Home
           </Link>
@@ -59,8 +76,16 @@ export function AdminLogin() {
               <ShieldCheck className="w-8 h-8 text-white" />
             </div>
             <h1 className="text-2xl font-semibold">Administrator Login</h1>
-            <p className="text-gray-600 text-center mt-1">Research Assistant Portal</p>
+            <p className="text-gray-600 text-center mt-1">
+              Research Assistant Portal
+            </p>
           </div>
+
+          {error && (
+            <div className="mb-4 text-sm text-red-600 text-center">
+              {error}
+            </div>
+          )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
@@ -93,14 +118,23 @@ export function AdminLogin() {
               <Checkbox
                 id="remember"
                 checked={rememberMe}
-                onCheckedChange={(checked) => setRememberMe(checked as boolean)}
+                onCheckedChange={(checked) =>
+                  setRememberMe(checked as boolean)
+                }
               />
-              <label htmlFor="remember" className="text-sm text-gray-600 cursor-pointer">
+              <label
+                htmlFor="remember"
+                className="text-sm text-gray-600 cursor-pointer"
+              >
                 Remember me
               </label>
             </div>
 
-            <Button type="submit" className="w-full bg-purple-600 hover:bg-purple-700" disabled={loading}>
+            <Button
+              type="submit"
+              className="w-full bg-purple-600 hover:bg-purple-700"
+              disabled={loading}
+            >
               {loading ? 'Logging in...' : 'Sign In'}
             </Button>
           </form>
@@ -109,3 +143,4 @@ export function AdminLogin() {
     </div>
   );
 }
+
