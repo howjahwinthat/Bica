@@ -1,4 +1,4 @@
-import { createBrowserRouter } from "react-router";
+import { createBrowserRouter } from "react-router-dom";
 import { Home } from "@/app/components/Home";
 import { StudentSignup } from "@/app/components/student/StudentSignup";
 import { StudentLogin } from "@/app/components/student/StudentLogin";
