@@ -20,26 +20,17 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-function decodeToken(token: string) {
+function decodeToken(token: string): User | null {
   try {
     const payload = JSON.parse(
       atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/'))
     );
-    return payload;
+
+    return payload as User;
   } catch {
     return null;
   }
 }
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-
-  // 🔐 Auto-login on app load
-  useEffect(() => {
-    const token =
-      localStorage.getItem('authToken') ||
-      sessionStorage.getItem('authToken');
-
-    if (!token) return;
-
-    const payload;
+  const [user, setUser] = useState
