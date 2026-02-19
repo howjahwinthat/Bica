@@ -8,7 +8,9 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3600;
 
-app.use(cors());
+app.use(cors({
+  origin: 'http://localhost:5173' // or your frontend URL
+}));
 app.use(express.json());
 
 // Test DB connection
@@ -25,3 +27,4 @@ app.get('/api/test', async (req, res) => {
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });
+
