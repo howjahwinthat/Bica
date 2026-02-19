@@ -23,39 +23,36 @@ export function StudentSignup() {
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setError('');
+  e.preventDefault();
+  setLoading(true);
+  setError('');
 
-    try {
-      const response = await fetch(
-  'http://127.0.0.1:3600/api/student/signup',
-  {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(formData),
+  try {
+    const response = await fetch('http://127.0.0.1:3600/api/student/signup', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(formData),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || 'Signup failed');
     }
-  );
 
- }
+    // Auto-login after signup
+    login(data.user, data.token, true);
 
-      const data = await response.json();
+    navigate('/student/dashboard');
 
-      if (!response.ok) {
-        throw new Error(data.message || 'Signup failed');
-      }
+  } catch (err: any) {
+    console.error(err);
+    setError(err.message || 'Something went wrong');
+  } finally {
+    setLoading(false);
+  }
+};
 
-      // Auto-login after signup
-      login(data.user, data.token, true);
-
-      navigate('/student/dashboard');
-    } catch (err: any) {
-      console.error(err);
-      setError(err.message || 'Something went wrong');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
