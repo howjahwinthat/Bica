@@ -7,6 +7,17 @@
     "build": "vite build",
     "dev": "vite"
   },
+  {
+  "type": "module",
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "dotenv": "^17.3.1",
+    "mysql2": "^3.3.3",
+    "bcryptjs": "^2.4.3"
+  }
+}
+
   "dependencies": {
     "@emotion/react": "11.14.0",
     "@emotion/styled": "11.14.1",
