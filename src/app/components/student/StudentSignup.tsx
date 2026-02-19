@@ -28,7 +28,7 @@ export function StudentSignup() {
     setError('');
 
     try {
-      const response = await fetch('http://localhost:5000/api/student/signup', {
+      const response = await fetch('http://localhost:3600/api/student/signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
