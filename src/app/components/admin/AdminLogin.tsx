@@ -1,57 +1,55 @@
-import { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router';
-import { Button } from '@/app/components/ui/button';
-import { Input } from '@/app/components/ui/input';
-import { Label } from '@/app/components/ui/label';
-import { Card } from '@/app/components/ui/card';
-import { Checkbox } from '@/app/components/ui/checkbox';
-import { AuthProivder } from '@/app/context/AuthContext';
-import { ArrowLeft, ShieldCheck } from 'lucide-react';
+import React, { useState, useEffect } from "react";
+import { useNavigate, Link } from "react-router-dom";
+import { Button } from "@/app/components/ui/button";
+import { Input } from "@/app/components/ui/input";
+import { Label } from "@/app/components/ui/label";
+import { Card } from "@/app/components/ui/card";
+import { Checkbox } from "@/app/components/ui/checkbox";
+import { useAuth } from "@/app/context/AuthContext";
+import { ArrowLeft, ShieldCheck } from "lucide-react";
 
-export function AdminLogin() {
+const AdminLogin: React.FC = () => {
   const navigate = useNavigate();
-  const { login, user } = AuthProvider();
+  const { login, user } = useAuth();
 
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
-  // 🔐 Auto-redirect if already logged in as admin
+  // Redirect if already logged in as admin
   useEffect(() => {
-    if (user && user.role === 'admin') {
-      navigate('/admin/dashboard');
+    if (user && user.role === "admin") {
+      navigate("/admin/dashboard");
     }
   }, [user, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setError('');
+    setError("");
 
     try {
-      const response = await fetch('http://localhost:5000/api/admin/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+      const response = await fetch("http://localhost:3000/api/admin/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
       });
 
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || 'Invalid credentials');
+        throw new Error(data.message || "Invalid credentials");
       }
 
-      // ✅ Store token if remember me is checked
+      // Save token & user
       login(data.user, data.token, rememberMe);
 
-      navigate('/admin/dashboard');
+      navigate("/admin/dashboard");
     } catch (err: any) {
       console.error(err);
-      setError(err.message || 'Login failed');
+      setError(err.message || "Login failed");
     } finally {
       setLoading(false);
     }
@@ -70,21 +68,16 @@ export function AdminLogin() {
           </Link>
         </div>
 
-        <Card className="p-8 bg-purple-50 border-purple-200">
+        <Card className="p-8">
           <div className="flex flex-col items-center mb-6">
-            <div className="w-16 h-16 bg-purple-600 rounded-full flex items-center justify-center mb-4">
-              <ShieldCheck className="w-8 h-8 text-white" />
+            <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mb-4">
+              <ShieldCheck className="w-8 h-8 text-purple-600" />
             </div>
-            <h1 className="text-2xl font-semibold">Administrator Login</h1>
-            <p className="text-gray-600 text-center mt-1">
-              Research Assistant Portal
-            </p>
+            <h1 className="text-2xl font-semibold">Admin Login</h1>
           </div>
 
           {error && (
-            <div className="mb-4 text-sm text-red-600 text-center">
-              {error}
-            </div>
+            <div className="mb-4 text-sm text-red-600 text-center">{error}</div>
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -95,9 +88,9 @@ export function AdminLogin() {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="admin@university.edu"
+                placeholder="admin@example.com"
                 required
-                className="mt-1 bg-white"
+                className="mt-1"
               />
             </div>
 
@@ -110,7 +103,7 @@ export function AdminLogin() {
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
                 required
-                className="mt-1 bg-white"
+                className="mt-1"
               />
             </div>
 
@@ -118,9 +111,7 @@ export function AdminLogin() {
               <Checkbox
                 id="remember"
                 checked={rememberMe}
-                onCheckedChange={(checked) =>
-                  setRememberMe(checked as boolean)
-                }
+                onCheckedChange={(checked) => setRememberMe(checked as boolean)}
               />
               <label
                 htmlFor="remember"
@@ -135,12 +126,13 @@ export function AdminLogin() {
               className="w-full bg-purple-600 hover:bg-purple-700"
               disabled={loading}
             >
-              {loading ? 'Logging in...' : 'Sign In'}
+              {loading ? "Logging in..." : "Login"}
             </Button>
           </form>
         </Card>
       </div>
     </div>
   );
-}
+};
 
+export default AdminLogin;

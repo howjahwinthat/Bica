@@ -1,13 +1,19 @@
+// src/app/routes.tsx
 import { createBrowserRouter } from "react-router-dom";
-import { Home } from "@/app/components/Home";
-import { StudentSignup } from "@/app/components/student/StudentSignup";
-import { StudentLogin } from "@/app/components/student/StudentLogin";
-import { StudentDashboard } from "@/app/components/student/StudentDashboard";
-import { StudyDetails } from "@/app/components/student/StudyDetails";
-import { AdminLogin } from "@/app/components/admin/AdminLogin";
-import { AdminDashboard } from "@/app/components/admin/AdminDashboard";
-import { CreateEditStudy } from "@/app/components/admin/CreateEditStudy";
-import { ProtectedRoute } from "@/app/components/ProtectedRoute";
+
+import Home from "@/app/components/Home";
+import StudentSignup from "@/app/components/student/StudentSignup";
+import StudentLogin from "@/app/components/student/StudentLogin";
+import StudentDashboard from "@/app/components/student/StudentDashboard";
+import StudyDetails from "@/app/components/student/StudyDetails";
+
+import AdminLogin from "@/app/components/admin/AdminLogin";
+import AdminDashboard from "@/app/components/admin/AdminDashboard";
+import CreateEditStudy from "@/app/components/admin/CreateEditStudy";
+import CreateTimeslot from "@/app/components/admin/CreateTimeslot";
+import TimeslotList from "@/app/components/admin/TimeslotList";
+
+import { ProtectedRoute } from '@/app/components/ProtectedRoute';
 
 export const router = createBrowserRouter([
   {
@@ -51,6 +57,14 @@ export const router = createBrowserRouter([
     ),
   },
   {
+    path: "/admin/timeslots",
+    Component: () => (
+      <ProtectedRoute role="admin">
+        <TimeslotList />
+      </ProtectedRoute>
+    ),
+  },
+  {
     path: "/admin/study/new",
     Component: () => (
       <ProtectedRoute role="admin">
@@ -63,6 +77,14 @@ export const router = createBrowserRouter([
     Component: () => (
       <ProtectedRoute role="admin">
         <CreateEditStudy />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/admin/timeslot/new",
+    Component: () => (
+      <ProtectedRoute role="admin">
+        <CreateTimeslot />
       </ProtectedRoute>
     ),
   },

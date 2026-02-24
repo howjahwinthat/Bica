@@ -1,67 +1,67 @@
-import { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { Button } from '@/app/components/ui/button';
-import { Input } from '@/app/components/ui/input';
-import { Label } from '@/app/components/ui/label';
-import { Card } from '@/app/components/ui/card';
-import { Checkbox } from '@/app/components/ui/checkbox';
-import { AuthProvider } from '@/app/context/AuthContext';
-import { ArrowLeft, GraduationCap } from 'lucide-react';
+import React, { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { Button } from "@/app/components/ui/button";
+import { Input } from "@/app/components/ui/input";
+import { Label } from "@/app/components/ui/label";
+import { Card } from "@/app/components/ui/card";
+import { Checkbox } from "@/app/components/ui/checkbox";
+import { useAuth } from "@/app/context/AuthContext";
+import { ArrowLeft, GraduationCap } from "lucide-react";
 
-export function StudentLogin() {
+const StudentLogin: React.FC = () => {
   const navigate = useNavigate();
-  const { login, user } = AuthProvider();
+  const { login, user } = useAuth();
 
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
-  // 🔐 Auto-redirect if already logged in
+  // Auto-redirect if already logged in
   useEffect(() => {
-    if (user && user.role === 'student') {
-      navigate('/student/dashboard');
+    if (user && user.role === "student") {
+      navigate("/student/dashboard");
     }
   }, [user, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setError('');
+    setError("");
 
     try {
-      const response = await fetch('http://localhost:5000/api/student/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+      const response = await fetch("http://localhost:3000/api/students/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
       });
 
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || 'Invalid credentials');
+        throw new Error(data.message || "Invalid credentials");
       }
 
-      // ✅ Save token via AuthContext
+      // Save token and user in AuthContext
       login(data.user, data.token, rememberMe);
-
-      navigate('/student/dashboard');
+      navigate("/student/dashboard");
     } catch (err: any) {
       console.error(err);
-      setError(err.message || 'Login failed');
+      setError(err.message || "Login failed");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center p-4">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
       <div className="max-w-md w-full">
         <div className="mb-6">
-          <Link to="/" className="inline-flex items-center text-blue-600 hover:text-blue-700">
+          <Link
+            to="/"
+            className="inline-flex items-center text-blue-600 hover:text-blue-700"
+          >
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back to Home
           </Link>
@@ -76,9 +76,7 @@ export function StudentLogin() {
           </div>
 
           {error && (
-            <div className="mb-4 text-sm text-red-600 text-center">
-              {error}
-            </div>
+            <div className="mb-4 text-sm text-red-600 text-center">{error}</div>
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -114,7 +112,10 @@ export function StudentLogin() {
                 checked={rememberMe}
                 onCheckedChange={(checked) => setRememberMe(checked as boolean)}
               />
-              <label htmlFor="remember" className="text-sm text-gray-600 cursor-pointer">
+              <label
+                htmlFor="remember"
+                className="text-sm text-gray-600 cursor-pointer"
+              >
                 Remember me
               </label>
             </div>
@@ -124,13 +125,16 @@ export function StudentLogin() {
               className="w-full bg-blue-600 hover:bg-blue-700"
               disabled={loading}
             >
-              {loading ? 'Logging in...' : 'Login'}
+              {loading ? "Logging in..." : "Login"}
             </Button>
           </form>
 
           <p className="text-center mt-4 text-sm text-gray-600">
-            Don't have an account?{' '}
-            <Link to="/student/signup" className="text-blue-600 hover:underline">
+            Don't have an account?{" "}
+            <Link
+              to="/student/signup"
+              className="text-blue-600 hover:underline"
+            >
               Sign Up
             </Link>
           </p>
@@ -138,4 +142,6 @@ export function StudentLogin() {
       </div>
     </div>
   );
-}
+};
+
+export default StudentLogin;
