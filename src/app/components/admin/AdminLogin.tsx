@@ -1,12 +1,12 @@
-import React, { useState, useEffect } from "react";
-import { useNavigate, Link } from "react-router-dom";
-import { Button } from "@/app/components/ui/button";
-import { Input } from "@/app/components/ui/input";
-import { Label } from "@/app/components/ui/label";
-import { Card } from "@/app/components/ui/card";
-import { Checkbox } from "@/app/components/ui/checkbox";
-import { useAuth } from "@/app/context/AuthContext";
-import { ArrowLeft, ShieldCheck } from "lucide-react";
+import { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router';
+import { Button } from '@/app/components/ui/button';
+import { Input } from '@/app/components/ui/input';
+import { Label } from '@/app/components/ui/label';
+import { Card } from '@/app/components/ui/card';
+import { Checkbox } from '@/app/components/ui/checkbox';
+import { AuthProivder } from '@/app/context/AuthContext';
+import { ArrowLeft, ShieldCheck } from 'lucide-react';
 
 const AdminLogin: React.FC = () => {
   const navigate = useNavigate();
@@ -31,9 +31,11 @@ const AdminLogin: React.FC = () => {
     setError("");
 
     try {
-      const response = await fetch("http://localhost:3000/api/admin/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      const response = await fetch('http://localhost:5000/api/admin/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify({ email, password }),
       });
 

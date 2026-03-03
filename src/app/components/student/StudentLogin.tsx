@@ -1,12 +1,12 @@
-import React, { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { Button } from "@/app/components/ui/button";
-import { Input } from "@/app/components/ui/input";
-import { Label } from "@/app/components/ui/label";
-import { Card } from "@/app/components/ui/card";
-import { Checkbox } from "@/app/components/ui/checkbox";
-import { useAuth } from "@/app/context/AuthContext";
-import { ArrowLeft, GraduationCap } from "lucide-react";
+import { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Button } from '@/app/components/ui/button';
+import { Input } from '@/app/components/ui/input';
+import { Label } from '@/app/components/ui/label';
+import { Card } from '@/app/components/ui/card';
+import { Checkbox } from '@/app/components/ui/checkbox';
+import { AuthProvider } from '@/app/context/AuthContext';
+import { ArrowLeft, GraduationCap } from 'lucide-react';
 
 const StudentLogin: React.FC = () => {
   const navigate = useNavigate();
@@ -31,9 +31,11 @@ const StudentLogin: React.FC = () => {
     setError("");
 
     try {
-      const response = await fetch("http://localhost:3000/api/students/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      const response = await fetch('http://localhost:5000/api/student/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify({ email, password }),
       });
 

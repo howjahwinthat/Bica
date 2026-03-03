@@ -1,16 +1,18 @@
-import React, { useState } from "react";
-import axios from "axios";
-import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/app/context/AuthContext";
+import { useState } from 'react';
+import { Link, useNavigate } from 'react-router';
+import { Button } from '@/app/components/ui/button';
+import { Input } from '@/app/components/ui/input';
+import { Label } from '@/app/components/ui/label';
+import { Card } from '@/app/components/ui/card';
+import { AuthProivder } from '@/app/context/AuthContext';
+import { ArrowLeft } from 'lucide-react';
 
-interface SignupResponse {
-  user: { id: string; email: string; role: string };
-  token: string;
-}
-
-const StudentSignup: React.FC = () => {
+export function StudentSignup() {
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { login } = AuthProvider();
+
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   const [formData, setFormData] = useState({
     name: "",
@@ -27,25 +29,29 @@ const StudentSignup: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
     setLoading(true);
-
-    console.log("Sending signup data:", formData);
+    setError('');
 
     try {
-      const response = await axios.post<SignupResponse>(
-        "http://localhost:3000/api/students/signup",
-        formData,
-        { headers: { "Content-Type": "application/json" } }
-      );
+      const response = await fetch('http://localhost:5000/api/student/signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      });
 
-      console.log("Signup response:", response.data);
+      const data = await response.json();
 
-      login(response.data.user, response.data.token, true);
-      navigate("/student/dashboard");
+      if (!response.ok) {
+        throw new Error(data.message || 'Signup failed');
+      }
+
+      // Auto-login after signup
+      login(data.user, data.token, true);
+
+      navigate('/student/dashboard');
     } catch (err: any) {
-      console.error("Signup error response:", err.response);
-      setError(err.response?.data?.message || "Signup failed. Please try again.");
+      console.error(err);
+      setError(err.message || 'Something went wrong');
     } finally {
       setLoading(false);
     }
