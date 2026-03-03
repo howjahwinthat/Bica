@@ -1,15 +1,13 @@
-import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/app/components/ui/button";
 import { Input } from "@/app/components/ui/input";
 import { Label } from "@/app/components/ui/label";
-import { Card } from "@/app/components/ui/card";
 import { useAuth } from "@/app/context/AuthContext";
-import { ArrowLeft } from "lucide-react";
 
-export function StudentSignup() {
+export default function StudentSignup() {
   const navigate = useNavigate();
-  const { login } = useAuth(); // use the hook, not AuthProvider()
+  const { login } = useAuth(); // use the hook
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -18,6 +16,8 @@ export function StudentSignup() {
     name: "",
     email: "",
     password: "",
+    studentId: "", // added student ID field
+    course: "",
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -30,14 +30,11 @@ export function StudentSignup() {
     setError(null);
 
     try {
-      const response = await fetch(
-        "http://localhost:5000/api/student/signup",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(formData),
-        }
-      );
+      const response = await fetch("http://localhost:3000/api/student/signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
 
       const data = await response.json();
 
@@ -91,6 +88,28 @@ export function StudentSignup() {
           </div>
 
           <div>
+            <Label htmlFor="studentId">Student ID</Label>
+            <Input
+              id="studentId"
+              name="studentId"
+              value={formData.studentId}
+              onChange={handleChange}
+              required
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="course">Course</Label>
+            <Input
+              id="course"
+              name="course"
+              value={formData.course}
+              onChange={handleChange}
+              required
+            />
+          </div>
+
+          <div>
             <Label htmlFor="password">Password</Label>
             <Input
               id="password"
@@ -114,5 +133,3 @@ export function StudentSignup() {
     </div>
   );
 }
-
-export default StudentSignup;

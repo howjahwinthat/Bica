@@ -5,7 +5,7 @@ import { Input } from '@/app/components/ui/input';
 import { Label } from '@/app/components/ui/label';
 import { Card } from '@/app/components/ui/card';
 import { Checkbox } from '@/app/components/ui/checkbox';
-import { AuthProivder } from '@/app/context/AuthContext';
+import { useAuth } from '@/app/context/AuthContext';
 import { ArrowLeft, ShieldCheck } from 'lucide-react';
 
 const AdminLogin: React.FC = () => {
@@ -18,7 +18,6 @@ const AdminLogin: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  // Redirect if already logged in as admin
   useEffect(() => {
     if (user && user.role === "admin") {
       navigate("/admin/dashboard");
@@ -33,9 +32,7 @@ const AdminLogin: React.FC = () => {
     try {
       const response = await fetch('http://localhost:5000/api/admin/login', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
       });
 
@@ -45,9 +42,7 @@ const AdminLogin: React.FC = () => {
         throw new Error(data.message || "Invalid credentials");
       }
 
-      // Save token & user
       login(data.user, data.token, rememberMe);
-
       navigate("/admin/dashboard");
     } catch (err: any) {
       console.error(err);
@@ -61,10 +56,7 @@ const AdminLogin: React.FC = () => {
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50 flex items-center justify-center p-4">
       <div className="max-w-md w-full">
         <div className="mb-6">
-          <Link
-            to="/"
-            className="inline-flex items-center text-purple-600 hover:text-purple-700"
-          >
+          <Link to="/" className="inline-flex items-center text-purple-600 hover:text-purple-700">
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back to Home
           </Link>
@@ -115,19 +107,12 @@ const AdminLogin: React.FC = () => {
                 checked={rememberMe}
                 onCheckedChange={(checked) => setRememberMe(checked as boolean)}
               />
-              <label
-                htmlFor="remember"
-                className="text-sm text-gray-600 cursor-pointer"
-              >
+              <label htmlFor="remember" className="text-sm text-gray-600 cursor-pointer">
                 Remember me
               </label>
             </div>
 
-            <Button
-              type="submit"
-              className="w-full bg-purple-600 hover:bg-purple-700"
-              disabled={loading}
-            >
+            <Button type="submit" className="w-full bg-purple-600 hover:bg-purple-700" disabled={loading}>
               {loading ? "Logging in..." : "Login"}
             </Button>
           </form>
