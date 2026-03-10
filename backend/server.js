@@ -17,27 +17,26 @@ app.use(express.json());
 // HEALTH CHECK
 // ===============================
 app.get('/', (req, res) => res.send('Backend is running'));
-
 // ===============================
 // STUDENT AUTH
 // ===============================
 app.post('/api/student/signup', async (req, res) => {
-  const { name, email, password, studentId, course } = req.body;
+  const { first_name, last_name, email, password } = req.body;
 
-  if (!name || !email || !password) {
-    return res.status(400).json({ message: 'Name, email and password are required' });
+  if (!first_name || !last_name || !email || !password) {
+    return res.status(400).json({ message: 'All fields are required' });
   }
 
   try {
-    const [existing] = await db.query('SELECT id FROM students WHERE email = ?', [email]);
+    const [existing] = await db.query('SELECT user_id FROM users WHERE email = ?', [email]);
     if (existing.length) {
       return res.status(409).json({ message: 'Email already registered' });
     }
 
     const hashed = await bcrypt.hash(password, 10);
     const [result] = await db.query(
-      `INSERT INTO students (name, email, password, student_id, course) VALUES (?, ?, ?, ?, ?)`,
-      [name, email, hashed, studentId || null, course || null]
+      `INSERT INTO users (role, first_name, last_name, email, password_hash) VALUES ('student', ?, ?, ?, ?)`,
+      [first_name, last_name, email, hashed]
     );
 
     res.status(201).json({ message: 'Student registered successfully' });
@@ -55,25 +54,26 @@ app.post('/api/student/login', async (req, res) => {
   }
 
   try {
-    const [rows] = await db.query('SELECT * FROM students WHERE email = ?', [email]);
+    const [rows] = await db.query(
+      `SELECT * FROM users WHERE email = ? AND role = 'student'`,
+      [email]
+    );
+
     if (!rows.length) {
       return res.status(401).json({ message: 'Invalid credentials' });
     }
 
-    const student = rows[0];
-    const match = await bcrypt.compare(password, student.password);
+    const userRow = rows[0];
+    const match = await bcrypt.compare(password, userRow.password_hash);
     if (!match) {
       return res.status(401).json({ message: 'Invalid credentials' });
     }
 
-   const user = {
-      id: String(student.id),
-      name: student.name,
-      email: student.email,
+    const user = {
+      id: String(userRow.user_id),
+      name: `${userRow.first_name} ${userRow.last_name}`,
+      email: userRow.email,
       role: 'student',
-      studentId: student.student_id,
-      course: student.course,
-      credits: student.credits ?? 0,
     };
 
     const token = jwt.sign(user, process.env.JWT_SECRET || 'secret', { expiresIn: '7d' });
@@ -83,11 +83,12 @@ app.post('/api/student/login', async (req, res) => {
     console.error(err);
     res.status(500).json({ message: 'Server error', error: err.message });
   }
-  
 });
+
 // ===============================
 // START SERVER
 // ===============================
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });
+
