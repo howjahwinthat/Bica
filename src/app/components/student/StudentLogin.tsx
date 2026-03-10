@@ -9,7 +9,7 @@ import { Checkbox } from '@/app/components/ui/checkbox';
 import { useAuth } from '@/app/context/AuthContext';
 import { ArrowLeft, GraduationCap } from 'lucide-react';
 
-export function StudentLogin() {
+export default function StudentLogin() {
   const navigate = useNavigate();
   const { login, user } = useAuth();
 
