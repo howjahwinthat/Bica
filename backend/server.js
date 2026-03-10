@@ -66,7 +66,21 @@ app.post('/api/student/login', async (req, res) => {
       return res.status(401).json({ message: 'Invalid credentials' });
     }
 
-    const user = {
+   const user = {
       id: String(student.id),
       name: student.name,
-      email: stud
+      email: student.email,
+      role: 'student',
+      studentId: student.student_id,
+      course: student.course,
+      credits: student.credits ?? 0,
+    };
+
+    const token = jwt.sign(user, process.env.JWT_SECRET || 'secret', { expiresIn: '7d' });
+
+    res.json({ user, token });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
+});
