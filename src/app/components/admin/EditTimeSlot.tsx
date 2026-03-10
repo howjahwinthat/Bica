@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-import axios from "axios";
 import { format, parseISO, addMinutes, isBefore } from "date-fns";
 import { useParams, useNavigate } from "react-router-dom";
 
@@ -48,8 +47,10 @@ const EditTimeslot: React.FC = () => {
   useEffect(() => {
     const fetchRooms = async () => {
       try {
-        const res = await axios.get<Room[]>("http://localhost:3000/api/rooms");
-        setRooms(res.data);
+        const res = await fetch("http://localhost:3000/api/rooms");
+        if (!res.ok) throw new Error();
+        const data: Room[] = await res.json();
+        setRooms(data);
       } catch {
         setError("Failed to load rooms.");
       }
@@ -63,13 +64,10 @@ const EditTimeslot: React.FC = () => {
 
     const fetchTimeslot = async () => {
       try {
-        // <TimeslotFormData> ensures TypeScript knows the shape
-        const res = await axios.get<TimeslotFormData>(
-          `http://localhost:3000/api/timeslots/${id}`
-        );
-        const data = res.data;
+        const res = await fetch(`http://localhost:3000/api/timeslots/${id}`);
+        if (!res.ok) throw new Error();
+        const data: TimeslotFormData = await res.json();
 
-        // Set form values safely
         setValue("room_id", data.room_id);
         setValue("title", data.title);
         setValue("study_type", data.study_type);
@@ -107,7 +105,12 @@ const EditTimeslot: React.FC = () => {
     setError(null);
     setSuccess(false);
     try {
-      await axios.put(`http://localhost:3000/api/timeslots/${id}`, data);
+      const res = await fetch(`http://localhost:3000/api/timeslots/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) throw new Error();
       setSuccess(true);
       setTimeout(() => navigate("/admin/dashboard"), 1000);
     } catch {
