@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-import axios from "axios";
 import { format, parseISO, isBefore, addMinutes } from "date-fns";
 import { useAuth } from "@/app/context/AuthContext";
 
@@ -38,7 +37,7 @@ const studyTypes = [
 ];
 
 const CreateTimeslot: React.FC = () => {
-  const { user } = useAuth(); // currently logged in user (if needed)
+  const { user } = useAuth();
   const [rooms, setRooms] = useState<Room[]>([]);
   const [timeslots, setTimeslots] = useState<Timeslot[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -59,11 +58,11 @@ const CreateTimeslot: React.FC = () => {
   useEffect(() => {
     const fetchRooms = async () => {
       try {
-        const response = await axios.get<Room[]>(
-          "http://localhost:3000/api/rooms"
-        );
-        setRooms(response.data);
-      } catch (err) {
+        const res = await fetch("http://localhost:3000/api/rooms");
+        if (!res.ok) throw new Error();
+        const data: Room[] = await res.json();
+        setRooms(data);
+      } catch {
         setError("Failed to load rooms.");
       }
     };
@@ -77,10 +76,7 @@ const CreateTimeslot: React.FC = () => {
       const minEnd = addMinutes(start, 30);
       const minEndStr = format(minEnd, "yyyy-MM-dd'T'HH:mm");
 
-      const endInput = document.getElementById(
-        "end_datetime"
-      ) as HTMLInputElement;
-
+      const endInput = document.getElementById("end_datetime") as HTMLInputElement;
       if (endInput) {
         endInput.min = minEndStr;
         if (endInput.value && isBefore(parseISO(endInput.value), minEnd)) {
@@ -102,15 +98,17 @@ const CreateTimeslot: React.FC = () => {
     }
 
     try {
-      const response = await axios.post<Timeslot>(
-        "http://localhost:3000/api/timeslots",
-        data
-      );
-      setTimeslots(prev => [...prev, response.data]);
+      const res = await fetch("http://localhost:3000/api/timeslots", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) throw new Error();
+      const created: Timeslot = await res.json();
+      setTimeslots(prev => [...prev, created]);
       setSuccess(true);
-      reset(); // <-- Step 7: Reset form fields after success
-    } catch (err) {
-      console.error(err);
+      reset();
+    } catch {
       setError("Failed to create timeslot.");
     }
   };
@@ -146,14 +144,10 @@ const CreateTimeslot: React.FC = () => {
           <select {...register("study_type", { required: true })}>
             <option value="">Select Type</option>
             {studyTypes.map(type => (
-              <option key={type} value={type}>
-                {type}
-              </option>
+              <option key={type} value={type}>{type}</option>
             ))}
           </select>
-          {errors.study_type && (
-            <p style={{ color: "red" }}>Study type required</p>
-          )}
+          {errors.study_type && <p style={{ color: "red" }}>Study type required</p>}
         </div>
 
         <div>
@@ -168,9 +162,7 @@ const CreateTimeslot: React.FC = () => {
             {...register("start_datetime", { required: true })}
             min={format(new Date(), "yyyy-MM-dd'T'HH:mm")}
           />
-          {errors.start_datetime && (
-            <p style={{ color: "red" }}>Start time required</p>
-          )}
+          {errors.start_datetime && <p style={{ color: "red" }}>Start time required</p>}
         </div>
 
         <div>
@@ -180,9 +172,7 @@ const CreateTimeslot: React.FC = () => {
             id="end_datetime"
             {...register("end_datetime", { required: true })}
           />
-          {errors.end_datetime && (
-            <p style={{ color: "red" }}>End time required</p>
-          )}
+          {errors.end_datetime && <p style={{ color: "red" }}>End time required</p>}
         </div>
 
         <div>
