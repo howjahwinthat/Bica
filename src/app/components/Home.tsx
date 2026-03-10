@@ -3,7 +3,7 @@ import { GraduationCap, ShieldCheck } from 'lucide-react';
 import { Button } from '@/app/components/ui/button';
 import { Card } from '@/app/components/ui/card';
 
-export function Home() {export function Home() {
+export function Home() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center p-4">
       <div className="max-w-4xl w-full">
