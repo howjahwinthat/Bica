@@ -6,7 +6,7 @@ import { useAuth } from '@/app/context/AuthContext';
 import { mockStudies } from '@/app/data/mockData';
 import { LogOut, User, BookOpen, Award, Calendar } from 'lucide-react';
 import { useEffect } from 'react';
-export function StudentDashboard() {
+export default function StudentDashboard() {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
   useEffect(() => {
