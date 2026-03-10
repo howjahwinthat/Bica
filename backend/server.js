@@ -83,4 +83,11 @@ app.post('/api/student/login', async (req, res) => {
     console.error(err);
     res.status(500).json({ message: 'Server error', error: err.message });
   }
+  
+});
+// ===============================
+// START SERVER
+// ===============================
+app.listen(PORT, () => {
+  console.log(`Server running on http://localhost:${PORT}`);
 });
