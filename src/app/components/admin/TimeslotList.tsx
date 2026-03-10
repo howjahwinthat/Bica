@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
 import { useAuth } from "@/app/context/AuthContext";
 
 export interface Timeslot {
@@ -18,21 +17,24 @@ const TimeslotList: React.FC = () => {
   const [timeslots, setTimeslots] = useState<Timeslot[]>([]);
   const [error, setError] = useState<string | null>(null);
 
-  // Fetch timeslots from backend
   const fetchTimeslots = async () => {
     try {
-      const response = await axios.get<Timeslot[]>("http://localhost:3000/api/timeslots");
-      setTimeslots(response.data);
+      const response = await fetch("http://localhost:3000/api/timeslots");
+      if (!response.ok) throw new Error("Failed to load timeslots.");
+      const data: Timeslot[] = await response.json();
+      setTimeslots(data);
     } catch (err) {
       console.error(err);
       setError("Failed to load timeslots.");
     }
   };
 
-  // Delete a timeslot
   const handleDelete = async (id: number) => {
     try {
-      await axios.delete(`http://localhost:3000/api/timeslots/${id}`);
+      const response = await fetch(`http://localhost:3000/api/timeslots/${id}`, {
+        method: "DELETE",
+      });
+      if (!response.ok) throw new Error("Failed to delete timeslot.");
       setTimeslots(timeslots.filter((t) => t.id !== id));
     } catch (err) {
       console.error(err);
@@ -47,9 +49,7 @@ const TimeslotList: React.FC = () => {
   return (
     <div style={{ padding: "1rem" }}>
       <h2>Timeslots</h2>
-
       {error && <p style={{ color: "red" }}>{error}</p>}
-
       <table style={{ width: "100%", borderCollapse: "collapse" }}>
         <thead>
           <tr>
