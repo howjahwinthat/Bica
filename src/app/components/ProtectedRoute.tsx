@@ -1,5 +1,5 @@
 import { ReactNode, useEffect, useState } from 'react';
-import { Navigate } from 'react-router';
+import { Navigate } from 'react-router-dom';
 import { AuthProvider } from '@/app/context/AuthContext';
 import { useAuth } from '@/app/context/AuthContext'; // <-- use the hook
 
