@@ -32,7 +32,6 @@ export function StudentLogin() {
     setError('');
 
     try {
-      const response = await fetch('http://localhost:5000/api/student/login', {
       const response = await fetch('http://localhost:3600/api/student/login', {
         method: 'POST',
         headers: {
