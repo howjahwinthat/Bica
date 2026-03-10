@@ -9,7 +9,6 @@ import { ArrowLeft } from 'lucide-react';
 
 export default function StudentSignup() {
   const navigate = useNavigate();
-  const { login } = useAuth();
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -24,36 +23,32 @@ export default function StudentSignup() {
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
-  setLoading(true);
-  setError('');
+    e.preventDefault();
+    setLoading(true);
+    setError('');
 
-  try {
-    const response = await fetch('http://127.0.0.1:3600/api/student/signup', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(formData),
-    });
+    try {
+      const response = await fetch('http://localhost:3600/api/student/signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      });
 
-    const data = await response.json();
+      const data = await response.json();
 
-    if (!response.ok) {
-      throw new Error(data.message || 'Signup failed');
+      if (!response.ok) {
+        throw new Error(data.message || 'Signup failed');
+      }
+
+      navigate('/student/login');
+
+    } catch (err: any) {
+      console.error(err);
+      setError(err.message || 'Something went wrong');
+    } finally {
+      setLoading(false);
     }
-
-    // Auto-login after signup
-    login(data.user, data.token, true);
-
-    navigate('/student/dashboard');
-
-  } catch (err: any) {
-    console.error(err);
-    setError(err.message || 'Something went wrong');
-  } finally {
-    setLoading(false);
-  }
-};
-
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
@@ -77,15 +72,25 @@ export default function StudentSignup() {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <Label>Name</Label>
-              <Input
-                value={formData.name}
-                onChange={(e) =>
-                  setFormData({ ...formData, name: e.target.value })
-                }
-                required
-              />
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label>First Name</Label>
+                <Input
+                  value={formData.first_name}
+                  onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
+                  placeholder="Jane"
+                  required
+                />
+              </div>
+              <div>
+                <Label>Last Name</Label>
+                <Input
+                  value={formData.last_name}
+                  onChange={(e) => setFormData({ ...formData, last_name: e.target.value })}
+                  placeholder="Doe"
+                  required
+                />
+              </div>
             </div>
 
             <div>
@@ -93,9 +98,8 @@ export default function StudentSignup() {
               <Input
                 type="email"
                 value={formData.email}
-                onChange={(e) =>
-                  setFormData({ ...formData, email: e.target.value })
-                }
+                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                placeholder="student@university.edu"
                 required
               />
             </div>
@@ -104,9 +108,8 @@ export default function StudentSignup() {
               <Label>Student ID</Label>
               <Input
                 value={formData.studentId}
-                onChange={(e) =>
-                  setFormData({ ...formData, studentId: e.target.value })
-                }
+                onChange={(e) => setFormData({ ...formData, studentId: e.target.value })}
+                placeholder="e.g. 20231234"
                 required
               />
             </div>
@@ -115,9 +118,8 @@ export default function StudentSignup() {
               <Label>Course</Label>
               <Input
                 value={formData.course}
-                onChange={(e) =>
-                  setFormData({ ...formData, course: e.target.value })
-                }
+                onChange={(e) => setFormData({ ...formData, course: e.target.value })}
+                placeholder="e.g. Computer Science"
                 required
               />
             </div>
@@ -127,9 +129,8 @@ export default function StudentSignup() {
               <Input
                 type="password"
                 value={formData.password}
-                onChange={(e) =>
-                  setFormData({ ...formData, password: e.target.value })
-                }
+                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                placeholder="••••••••"
                 required
               />
             </div>
