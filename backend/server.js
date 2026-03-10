@@ -21,9 +21,9 @@ app.get('/', (req, res) => res.send('Backend is running'));
 // STUDENT AUTH
 // ===============================
 app.post('/api/student/signup', async (req, res) => {
-  const { first_name, last_name, email, password } = req.body;
+  const { first_name, last_name, email, password, studentId, course } = req.body;
 
-  if (!first_name || !last_name || !email || !password) {
+  if (!first_name || !last_name || !email || !password || !studentId || !course) {
     return res.status(400).json({ message: 'All fields are required' });
   }
 
@@ -37,6 +37,14 @@ app.post('/api/student/signup', async (req, res) => {
     const [result] = await db.query(
       `INSERT INTO users (role, first_name, last_name, email, password_hash) VALUES ('student', ?, ?, ?, ?)`,
       [first_name, last_name, email, hashed]
+    );
+
+    const user_id = result.insertId;
+
+    // Also insert into students table
+    await db.query(
+      `INSERT INTO students (student_id, student_number, major) VALUES (?, ?, ?)`,
+      [user_id, studentId, course]
     );
 
     res.status(201).json({ message: 'Student registered successfully' });
@@ -91,4 +99,5 @@ app.post('/api/student/login', async (req, res) => {
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });
+
 
