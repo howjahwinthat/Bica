@@ -1,9 +1,8 @@
+// server.js
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
-import { db } from './db.js'; // mysql2/promise pool
+import { db } from './db.js'; // your MySQL pool
 
 dotenv.config();
 const app = express();
@@ -12,87 +11,145 @@ const PORT = process.env.PORT || 3000;
 app.use(cors({ origin: 'http://localhost:5173' }));
 app.use(express.json());
 
+// ===============================
+// HEALTH CHECK
+// ===============================
 app.get('/', (req, res) => res.send('Backend is running'));
 
 // ===============================
-// STUDENT SIGNUP
+// ROOMS
 // ===============================
-app.post('/api/student/signup', async (req, res) => {
+app.get('/api/rooms', async (req, res) => {
   try {
-    const { name, email, studentId, course, password } = req.body;
-    if (!name || !email || !studentId || !course || !password) {
-      return res.status(400).json({ message: 'All fields are required' });
+    const [rows] = await db.query('SELECT id, name, capacity FROM rooms');
+    res.json(rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
+});
+
+// ===============================
+// STUDIES WITH TIMESLOTS
+// ===============================
+
+// CREATE NEW STUDY + TIMESLOTS
+app.post('/api/studies', async (req, res) => {
+  const { title, description, researcher_id, credit_value, max_participants, status, timeslots } = req.body;
+
+  if (!title || !description || !researcher_id || !credit_value || !max_participants || !status) {
+    return res.status(400).json({ message: 'All study fields are required' });
+  }
+
+  try {
+    const [result] = await db.query(
+      `INSERT INTO studies
+        (title, description, researcher_id, credit_value, max_participants, status, created_at)
+       VALUES (?, ?, ?, ?, ?, ?, NOW())`,
+      [title, description, researcher_id, credit_value, max_participants, status]
+    );
+
+    const study_id = result.insertId;
+
+    // Insert timeslots if provided
+    if (Array.isArray(timeslots)) {
+      for (let t of timeslots) {
+        const { room_id, start_datetime, end_datetime } = t;
+        if (room_id && start_datetime && end_datetime) {
+          await db.query(
+            `INSERT INTO timeslots (study_id, room_id, start_time, end_time)
+             VALUES (?, ?, ?, ?)`,
+            [study_id, room_id, start_datetime, end_datetime]
+          );
+        }
+      }
     }
 
-    const [existing] = await db.query('SELECT * FROM users WHERE email = ?', [email]);
-    if (existing.length > 0) return res.status(400).json({ message: 'Email already registered' });
-
-    const passwordHash = await bcrypt.hash(password, 10);
-
-    const [userResult] = await db.query(
-      'INSERT INTO users (role, first_name, last_name, email, password_hash) VALUES (?, ?, ?, ?, ?)',
-      ['student', name.split(' ')[0], name.split(' ').slice(1).join(' ') || '', email, passwordHash]
-    );
-
-    const userId = userResult.insertId;
-
-    await db.query(
-      'INSERT INTO students (student_id, student_number, major, year_level, total_credits) VALUES (?, ?, ?, ?, ?)',
-      [userId, studentId, course, '1', 0]
-    );
-
-    const token = jwt.sign(
-      { id: userId.toString(), name, email, role: 'student', studentId, course, credits: 0 },
-      process.env.JWT_SECRET,
-      { expiresIn: '1d' }
-    );
-
-    res.status(201).json({
-      message: 'Student account created',
-      user: { id: userId.toString(), name, email, role: 'student', studentId, course, credits: 0 },
-      token
-    });
+    res.status(201).json({ study_id, message: 'Study and timeslots created' });
   } catch (err) {
-    console.error('Signup error:', err);
-    res.status(500).json({ message: 'Server error' });
+    console.error(err);
+    res.status(500).json({ message: 'Server error', error: err.message });
   }
 });
 
-// ===============================
-// STUDENT LOGIN
-// ===============================
-app.post('/api/student/login', async (req, res) => {
+// EDIT STUDY + TIMESLOTS
+app.put('/api/studies/:study_id', async (req, res) => {
+  const { study_id } = req.params;
+  const { title, description, researcher_id, credit_value, max_participants, status, timeslots } = req.body;
+
   try {
-    const { email, password } = req.body;
-    const [users] = await db.query('SELECT * FROM users WHERE email = ?', [email]);
-    if (users.length === 0) return res.status(400).json({ message: 'Invalid credentials' });
-
-    const user = users[0];
-    const validPassword = await bcrypt.compare(password, user.password_hash);
-    if (!validPassword) return res.status(400).json({ message: 'Invalid credentials' });
-
-    const [students] = await db.query('SELECT * FROM students WHERE student_id = ?', [user.user_id]);
-    if (students.length === 0) return res.status(400).json({ message: 'Student record not found' });
-
-    const student = students[0];
-    const fullName = `${user.first_name} ${user.last_name}`.trim();
-
-    const token = jwt.sign(
-      { id: user.user_id.toString(), name: fullName, email: user.email, role: user.role, studentId: student.student_number, course: student.major, credits: student.total_credits },
-      process.env.JWT_SECRET,
-      { expiresIn: '1d' }
+    await db.query(
+      `UPDATE studies
+       SET title = ?, description = ?, researcher_id = ?, credit_value = ?, max_participants = ?, status = ?
+       WHERE study_id = ?`,
+      [title, description, researcher_id, credit_value, max_participants, status, study_id]
     );
 
-    res.json({
-      user: { id: user.user_id.toString(), name: fullName, email: user.email, role: user.role, studentId: student.student_number, course: student.major, credits: student.total_credits },
-      token
-    });
+    // Delete existing timeslots and replace
+    if (Array.isArray(timeslots)) {
+      await db.query(`DELETE FROM timeslots WHERE study_id = ?`, [study_id]);
+      for (let t of timeslots) {
+        const { room_id, start_datetime, end_datetime } = t;
+        if (room_id && start_datetime && end_datetime) {
+          await db.query(
+            `INSERT INTO timeslots (study_id, room_id, start_time, end_time)
+             VALUES (?, ?, ?, ?)`,
+            [study_id, room_id, start_datetime, end_datetime]
+          );
+        }
+      }
+    }
+
+    res.json({ study_id, message: 'Study and timeslots updated' });
   } catch (err) {
-    console.error('Login error:', err);
-    res.status(500).json({ message: 'Server error' });
+    console.error(err);
+    res.status(500).json({ message: 'Server error', error: err.message });
   }
 });
 
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Server running on http://127.0.0.1:${PORT}`);
+// GET ALL STUDIES WITH TIMESLOTS
+app.get('/api/studies', async (req, res) => {
+  try {
+    const [studies] = await db.query('SELECT * FROM studies');
+    const result = [];
+
+    for (let s of studies) {
+      const [slots] = await db.query(
+        'SELECT id, room_id, start_time, end_time FROM timeslots WHERE study_id = ?',
+        [s.study_id]
+      );
+      result.push({ ...s, timeslots: slots });
+    }
+
+    res.json(result);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
+});
+
+// GET SINGLE STUDY WITH TIMESLOTS
+app.get('/api/studies/:study_id', async (req, res) => {
+  const { study_id } = req.params;
+  try {
+    const [studies] = await db.query('SELECT * FROM studies WHERE study_id = ?', [study_id]);
+    if (!studies.length) return res.status(404).json({ message: 'Study not found' });
+
+    const [slots] = await db.query(
+      'SELECT id, room_id, start_time AS start_datetime, end_time AS end_datetime FROM timeslots WHERE study_id = ?',
+      [study_id]
+    );
+
+    res.json({ ...studies[0], timeslots: slots });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
+});
+
+// ===============================
+// START SERVER
+// ===============================
+app.listen(PORT, () => {
+  console.log(`Server running on http://localhost:${PORT}`);
 });

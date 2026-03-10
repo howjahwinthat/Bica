@@ -1,12 +1,12 @@
-import { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router';
-import { Button } from '@/app/components/ui/button';
-import { Input } from '@/app/components/ui/input';
-import { Label } from '@/app/components/ui/label';
-import { Card } from '@/app/components/ui/card';
-import { Checkbox } from '@/app/components/ui/checkbox';
-import { useAuth } from '@/app/context/AuthContext';
-import { ArrowLeft, ShieldCheck } from 'lucide-react';
+import { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router";
+import { Button } from "@/app/components/ui/button";
+import { Input } from "@/app/components/ui/input";
+import { Label } from "@/app/components/ui/label";
+import { Card } from "@/app/components/ui/card";
+import { Checkbox } from "@/app/components/ui/checkbox";
+import { useAuth } from "@/app/context/AuthContext";
+import { ArrowLeft, ShieldCheck } from "lucide-react";
 
 const AdminLogin: React.FC = () => {
   const navigate = useNavigate();
@@ -30,20 +30,21 @@ const AdminLogin: React.FC = () => {
     setError("");
 
     try {
-      const response = await fetch('http://localhost:3000/api/admin/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-      });
+      // Hardcoded admin credentials
+      const hardcodedAdmin = {
+        id: "1", // <-- use string here
+        name: "Admin User",
+        email: "admin@example.com",
+        password: "password123",
+        role: "admin",
+      };
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || "Invalid credentials");
+      if (email === hardcodedAdmin.email && password === hardcodedAdmin.password) {
+        login(hardcodedAdmin, "test-token", rememberMe);
+        navigate("/admin/dashboard");
+      } else {
+        throw new Error("Invalid credentials");
       }
-
-      login(data.user, data.token, rememberMe);
-      navigate("/admin/dashboard");
     } catch (err: any) {
       console.error(err);
       setError(err.message || "Login failed");
@@ -56,7 +57,10 @@ const AdminLogin: React.FC = () => {
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50 flex items-center justify-center p-4">
       <div className="max-w-md w-full">
         <div className="mb-6">
-          <Link to="/" className="inline-flex items-center text-purple-600 hover:text-purple-700">
+          <Link
+            to="/"
+            className="inline-flex items-center text-purple-600 hover:text-purple-700"
+          >
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back to Home
           </Link>
@@ -70,9 +74,7 @@ const AdminLogin: React.FC = () => {
             <h1 className="text-2xl font-semibold">Admin Login</h1>
           </div>
 
-          {error && (
-            <div className="mb-4 text-sm text-red-600 text-center">{error}</div>
-          )}
+          {error && <div className="mb-4 text-sm text-red-600 text-center">{error}</div>}
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
@@ -112,7 +114,11 @@ const AdminLogin: React.FC = () => {
               </label>
             </div>
 
-            <Button type="submit" className="w-full bg-purple-600 hover:bg-purple-700" disabled={loading}>
+            <Button
+              type="submit"
+              className="w-full bg-purple-600 hover:bg-purple-700"
+              disabled={loading}
+            >
               {loading ? "Logging in..." : "Login"}
             </Button>
           </form>

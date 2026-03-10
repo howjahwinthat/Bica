@@ -1,25 +1,20 @@
-import { ReactNode, useEffect, useState } from 'react';
-import { Navigate } from 'react-router';
-import { AuthProvider } from '@/app/context/AuthContext';
+// src/app/components/ProtectedRoute.tsx
+import React, { ReactNode } from "react";
+import { Navigate } from "react-router-dom";
+import { useAuth } from "@/app/context/AuthContext";
 
 interface ProtectedRouteProps {
-  role: 'student' | 'admin' | 'researcher';
+  role: string;
   children: ReactNode;
-  redirectTo?: string;
 }
 
-export function ProtectedRoute({ role, children, redirectTo = '/' }: ProtectedRouteProps) {
-  const { user } = AuthProvider();
-  const [loading, setLoading] = useState(true);
+export function ProtectedRoute({ role, children }: ProtectedRouteProps) {
+  const { user } = useAuth();
 
-  useEffect(() => {
-    // Optional: simulate token check
-    setLoading(false);
-  }, []);
+  if (!user || user.role !== role) {
+    // redirect to role-specific login if not authenticated
+    return <Navigate to={`/${role}/login`} replace />;
+  }
 
-  if (loading) return <div>Loading...</div>;
-
-  if (!user || user.role !== role) return <Navigate to={redirectTo} replace />;
-
-  return <>{children}</>;
+  return <>{children}</>; // render wrapped component
 }
