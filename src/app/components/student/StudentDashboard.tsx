@@ -53,7 +53,7 @@ export default function StudentDashboard() {
       <div className="max-w-7xl mx-auto px-4 py-8">
         {/* Welcome Section */}
         <div className="mb-8">
-          <h1 className="text-3xl font-semibold mb-2">Welcome, {user.name.split(' ')[0]}!</h1>
+          <h1 className="text-3xl font-semibold mb-2">Welcome, {user.name}!</h1>
           <p className="text-gray-600">Dashboard</p>
         </div>
         {/* Stats Cards */}
