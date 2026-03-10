@@ -7,7 +7,7 @@ import { Card } from '@/app/components/ui/card';
 import { useAuth } from '@/app/context/AuthContext';
 import { ArrowLeft } from 'lucide-react';
 
-export function StudentSignup() {
+export default function StudentSignup() {
   const navigate = useNavigate();
   const { login } = useAuth();
 
