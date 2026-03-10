@@ -8,7 +8,7 @@ interface ProtectedRouteProps {
   redirectTo?: string;
 }
 
-export default function ProtectedRoute({ role, children, redirectTo = '/' }: ProtectedRouteProps) {
+export function ProtectedRoute({ role, children, redirectTo = '/' }: ProtectedRouteProps) {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
 
