@@ -15,7 +15,8 @@ export default function StudentSignup() {
   const [error, setError] = useState('');
 
   const [formData, setFormData] = useState({
-    name: '',
+    first_name: '',
+    last_name: '',
     email: '',
     studentId: '',
     course: '',
