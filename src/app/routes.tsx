@@ -1,36 +1,32 @@
-// src/app/routes.tsx
 import { createBrowserRouter } from "react-router-dom";
-
 import Home from "@/app/components/Home";
 import StudentSignup from "@/app/components/student/StudentSignup";
 import StudentLogin from "@/app/components/student/StudentLogin";
 import StudentDashboard from "@/app/components/student/StudentDashboard";
 import StudyDetails from "@/app/components/student/StudyDetails";
-
 import AdminLogin from "@/app/components/admin/AdminLogin";
 import AdminDashboard from "@/app/components/admin/AdminDashboard";
 import CreateEditStudy from "@/app/components/admin/CreateEditStudy";
 import CreateTimeslot from "@/app/components/admin/CreateTimeslot";
 import TimeslotList from "@/app/components/admin/TimeslotList";
-
 import { ProtectedRoute } from '@/app/components/ProtectedRoute';
 
 export const router = createBrowserRouter([
   {
     path: "/",
-    Component: Home,
+    element: <Home />,
   },
   {
     path: "/student/signup",
-    Component: StudentSignup,
+    element: <StudentSignup />,
   },
   {
     path: "/student/login",
-    Component: StudentLogin,
+    element: <StudentLogin />,
   },
   {
     path: "/student/dashboard",
-    Component: () => (
+    element: (
       <ProtectedRoute role="student">
         <StudentDashboard />
       </ProtectedRoute>
@@ -38,7 +34,7 @@ export const router = createBrowserRouter([
   },
   {
     path: "/student/study/:id",
-    Component: () => (
+    element: (
       <ProtectedRoute role="student">
         <StudyDetails />
       </ProtectedRoute>
@@ -46,11 +42,11 @@ export const router = createBrowserRouter([
   },
   {
     path: "/admin/login",
-    Component: AdminLogin,
+    element: <AdminLogin />,
   },
   {
     path: "/admin/dashboard",
-    Component: () => (
+    element: (
       <ProtectedRoute role="admin">
         <AdminDashboard />
       </ProtectedRoute>
@@ -58,7 +54,7 @@ export const router = createBrowserRouter([
   },
   {
     path: "/admin/timeslots",
-    Component: () => (
+    element: (
       <ProtectedRoute role="admin">
         <TimeslotList />
       </ProtectedRoute>
@@ -66,7 +62,7 @@ export const router = createBrowserRouter([
   },
   {
     path: "/admin/study/new",
-    Component: () => (
+    element: (
       <ProtectedRoute role="admin">
         <CreateEditStudy />
       </ProtectedRoute>
@@ -74,7 +70,7 @@ export const router = createBrowserRouter([
   },
   {
     path: "/admin/study/:id/edit",
-    Component: () => (
+    element: (
       <ProtectedRoute role="admin">
         <CreateEditStudy />
       </ProtectedRoute>
@@ -82,7 +78,7 @@ export const router = createBrowserRouter([
   },
   {
     path: "/admin/timeslot/new",
-    Component: () => (
+    element: (
       <ProtectedRoute role="admin">
         <CreateTimeslot />
       </ProtectedRoute>
