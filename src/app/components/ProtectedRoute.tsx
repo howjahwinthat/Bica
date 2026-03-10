@@ -1,20 +1,24 @@
-// src/app/components/ProtectedRoute.tsx
-import React, { ReactNode } from "react";
-import { Navigate } from "react-router-dom";
-import { useAuth } from "@/app/context/AuthContext";
+import { ReactNode, useEffect, useState } from 'react';
+import { Navigate } from 'react-router';
+import { AuthProvider } from '@/app/context/AuthContext';
+import { useAuth } from '@/app/context/AuthContext'; // <-- use the hook
 
 interface ProtectedRouteProps {
-  role: string;
-  children: ReactNode;
+  role: 'student' | 'admin' | 'researcher';
 }
 
-export function ProtectedRoute({ role, children }: ProtectedRouteProps) {
-  const { user } = useAuth();
+export function ProtectedRoute({ role, children, redirectTo = '/' }: ProtectedRouteProps) {
+  const { user } = useAuth(); // <-- use the hook, not the provider
+  const [loading, setLoading] = useState(true);
 
-  if (!user || user.role !== role) {
-    // redirect to role-specific login if not authenticated
-    return <Navigate to={`/${role}/login`} replace />;
-  }
+  useEffect(() => {
+    // Simulate token check on mount (optional: fetch user data from backend)
+    setLoading(false);
+  }, []);
 
-  return <>{children}</>; // render wrapped component
+  if (loading) return <div>Loading...</div>;
+
+  if (!user || user.role !== role) return <Navigate to={redirectTo} replace />;
+
+  return <>{children}</>;
 }
