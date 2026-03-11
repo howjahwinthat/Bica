@@ -13,10 +13,10 @@ import CreateEditStudy from "./components/admin/CreateEditStudy";
 import CreateTimeslot from "./components/admin/CreateTimeslot";
 import EditTimeslot from "./components/admin/EditTimeslot";
 import TimeslotList from "./components/admin/TimeslotList";
-import StudentSignup from "./student/StudentSignup";
-import StudentLogin from "./student/StudentLogin";
-import StudentDashboard from "./student/StudentDashboard";
-import StudyDetails from "./student/StudyDetails";
+import StudentSignup from "./components/student/StudentSignup";
+import StudentLogin from "./components/student/StudentLogin";
+import StudentDashboard from "./components/student/StudentDashboard";
+import StudyDetails from "./components/student/StudyDetails";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 // RoleRedirect: reads the current user's role and sends them to the right home page.
