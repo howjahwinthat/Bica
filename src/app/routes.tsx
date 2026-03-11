@@ -18,6 +18,7 @@ import StudentLogin from "./components/student/StudentLogin";
 import StudentDashboard from "./components/student/StudentDashboard";
 import StudyDetails from "./components/student/StudyDetails";
 import { ProtectedRoute } from "./components/ProtectedRoute";
+import AdminLogin from "./components/admin/AdminLogin";
 
 // RoleRedirect: reads the current user's role and sends them to the right home page.
 // Replace the role-detection logic here with however your app stores auth state
@@ -59,6 +60,11 @@ export const router = createBrowserRouter([
   {
     path: "/admin/study/new",
     Component: CreateEditStudy,
+  },
+  // Add to router
+  {
+  path: "/admin/login",
+  Component: AdminLogin,
   },
   {
     path: "/admin/study/:id",
