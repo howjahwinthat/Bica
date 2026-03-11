@@ -13,6 +13,11 @@ import CreateEditStudy from "./components/admin/CreateEditStudy";
 import CreateTimeslot from "./components/admin/CreateTimeslot";
 import EditTimeslot from "./components/admin/EditTimeslot";
 import TimeslotList from "./components/admin/TimeslotList";
+import StudentSignup from "./student/StudentSignup";
+import StudentLogin from "./student/StudentLogin";
+import StudentDashboard from "./student/StudentDashboard";
+import StudyDetails from "./student/StudyDetails";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 // RoleRedirect: reads the current user's role and sends them to the right home page.
 // Replace the role-detection logic here with however your app stores auth state
