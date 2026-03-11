@@ -1,9 +1,9 @@
 // src/app/components/admin/AdminDashboard.tsx
 import React, { useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { Button } from "@/app/components/ui/button";
-import { Card } from "@/app/components/ui/card";
-import { useAuth } from "@/app/context/AuthContext";
+import { Button } from "../ui/button";
+import { Card } from "../ui/card";
+import { useAuth } from "../../context/AuthContext";
 import { ShieldCheck, Plus } from "lucide-react";
 
 const AdminDashboard: React.FC = () => {
