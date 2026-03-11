@@ -1,4 +1,4 @@
-import { createBrowserRouter, Navigate } from "react-router";
+import { createBrowserRouter } from "react-router";
 import { AdminLayout } from "./components/admin-layout";
 import { Dashboard } from "./components/pages/dashboard";
 import { CreateStudy } from "./components/pages/create-study";
@@ -20,18 +20,17 @@ import StudentDashboard from "./components/student/StudentDashboard";
 import StudyDetails from "./components/student/StudyDetails";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 
-
-// Remove RoleRedirect entirely, and change the root route to:
-{
-  path: "/",
-  element: <Home />,
-},
+export const router = createBrowserRouter([
+  // ─── Root: portal/home ───────────────────────────────────────────────────
+  {
+    path: "/",
+    element: <Home />,
+  },
 
   // ─── All routes with sidebar (AdminLayout) ────────────────────────────────
   {
     Component: AdminLayout,
     children: [
-      // Legacy dashboard routes
       { path: "/dashboard", Component: Dashboard },
       { path: "/create-study", Component: CreateStudy },
       { path: "/edit-study/:studyId?", Component: EditStudy },
@@ -39,8 +38,6 @@ import { ProtectedRoute } from "./components/ProtectedRoute";
       { path: "/study-rules/:studyId?", Component: StudyRules },
       { path: "/session-management", Component: SessionManagement },
       { path: "/training", Component: TrainingOnboarding },
-
-      // Admin routes — now inside AdminLayout so sidebar shows
       { path: "/admin/dashboard", Component: AdminDashboard },
       { path: "/admin/study/new", Component: CreateEditStudy },
       { path: "/admin/study/:id", Component: CreateEditStudy },
@@ -54,10 +51,6 @@ import { ProtectedRoute } from "./components/ProtectedRoute";
   {
     path: "/admin/login",
     Component: AdminLogin,
-  },
-  {
-    path: "/home",
-    element: <Home />,
   },
   {
     path: "/student/signup",
