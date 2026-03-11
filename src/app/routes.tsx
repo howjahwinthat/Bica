@@ -1,19 +1,79 @@
-import { createBrowserRouter } from "react-router-dom";
-import Home from "@/app/components/Home";
-import StudentSignup from "@/app/components/student/StudentSignup";
-import StudentLogin from "@/app/components/student/StudentLogin";
-import StudentDashboard from "@/app/components/student/StudentDashboard";
-import StudyDetails from "@/app/components/student/StudyDetails";
-import AdminLogin from "@/app/components/admin/AdminLogin";
-import AdminDashboard from "@/app/components/admin/AdminDashboard";
-import CreateEditStudy from "@/app/components/admin/CreateEditStudy";
-import CreateTimeslot from "@/app/components/admin/CreateTimeslot";
-import TimeslotList from "@/app/components/admin/TimeslotList";
-import { ProtectedRoute } from '@/app/components/ProtectedRoute';
+import { createBrowserRouter, Navigate } from "react-router";
+import { AdminLayout } from "./components/admin-layout";
+import { Dashboard } from "./pages/dashboard";
+import { CreateStudy } from "./pages/create-study";
+import { EditStudy } from "./pages/edit-study";
+import { StudyApproval } from "./pages/study-approval";
+import { StudyRules } from "./pages/study-rules";
+import { SessionManagement } from "./pages/session-management";
+import { TrainingOnboarding } from "./pages/training-onboarding";
+import AdminDashboard from "./components/admin/AdminDashboard";
+import CreateEditStudy from "./components/admin/CreateEditStudy";
+import CreateTimeslot from "./components/admin/CreateTimeslot";
+import EditTimeslot from "./components/admin/EditTimeslot";
+import TimeslotList from "./components/admin/TimeslotList";
+
+// RoleRedirect: reads the current user's role and sends them to the right home page.
+// Replace the role-detection logic here with however your app stores auth state
+// (e.g. context, Redux, a cookie, localStorage, etc.).
+function RoleRedirect() {
+  const role = getCurrentUserRole(); // 👈 replace with your actual auth hook/util
+  if (role === "admin") return <Navigate to="/admin/dashboard" replace />;
+  if (role === "student") return <Navigate to="/student/dashboard" replace />;
+  return <Navigate to="/student/login" replace />; // unauthenticated fallback
+}
 
 export const router = createBrowserRouter([
+  // ─── Root: role-based redirect ───────────────────────────────────────────
   {
     path: "/",
+    element: <RoleRedirect />,
+  },
+
+  // ─── Legacy admin routes (AdminLayout wrapper) ────────────────────────────
+  {
+    path: "/dashboard",
+    Component: AdminLayout,
+    children: [
+      { index: true, Component: Dashboard },
+      { path: "create-study", Component: CreateStudy },
+      { path: "edit-study/:studyId?", Component: EditStudy },
+      { path: "study-approval", Component: StudyApproval },
+      { path: "study-rules/:studyId?", Component: StudyRules },
+      { path: "session-management", Component: SessionManagement },
+      { path: "training", Component: TrainingOnboarding },
+    ],
+  },
+
+  // ─── Admin routes (no shared layout) ─────────────────────────────────────
+  {
+    path: "/admin/dashboard",
+    Component: AdminDashboard,
+  },
+  {
+    path: "/admin/study/new",
+    Component: CreateEditStudy,
+  },
+  {
+    path: "/admin/study/:id",
+    Component: CreateEditStudy,
+  },
+  {
+    path: "/admin/timeslot/new",
+    Component: CreateTimeslot,
+  },
+  {
+    path: "/admin/timeslot/:id",
+    Component: EditTimeslot,
+  },
+  {
+    path: "/admin/timeslots",
+    Component: TimeslotList,
+  },
+
+  // ─── Student / public routes (no shared layout) ───────────────────────────
+  {
+    path: "/home",
     element: <Home />,
   },
   {
@@ -37,50 +97,6 @@ export const router = createBrowserRouter([
     element: (
       <ProtectedRoute role="student">
         <StudyDetails />
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: "/admin/login",
-    element: <AdminLogin />,
-  },
-  {
-    path: "/admin/dashboard",
-    element: (
-      <ProtectedRoute role="admin">
-        <AdminDashboard />
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: "/admin/timeslots",
-    element: (
-      <ProtectedRoute role="admin">
-        <TimeslotList />
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: "/admin/study/new",
-    element: (
-      <ProtectedRoute role="admin">
-        <CreateEditStudy />
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: "/admin/study/:id/edit",
-    element: (
-      <ProtectedRoute role="admin">
-        <CreateEditStudy />
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: "/admin/timeslot/new",
-    element: (
-      <ProtectedRoute role="admin">
-        <CreateTimeslot />
       </ProtectedRoute>
     ),
   },
