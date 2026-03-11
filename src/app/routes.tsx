@@ -19,11 +19,12 @@ import StudentLogin from "./components/student/StudentLogin";
 import StudentDashboard from "./components/student/StudentDashboard";
 import StudyDetails from "./components/student/StudyDetails";
 import { ProtectedRoute } from "./components/ProtectedRoute";
+import { useAuth } from "./context/AuthContext";
 
 function RoleRedirect() {
-  const role = getCurrentUserRole(); // 👈 replace with your auth hook/util
-  if (role === "admin") return <Navigate to="/admin/dashboard" replace />;
-  if (role === "student") return <Navigate to="/student/dashboard" replace />;
+  const { user } = useAuth();
+  if (user?.role === "admin") return <Navigate to="/admin/dashboard" replace />;
+  if (user?.role === "student") return <Navigate to="/student/dashboard" replace />;
   return <Navigate to="/student/login" replace />;
 }
 
