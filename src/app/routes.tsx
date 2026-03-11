@@ -6,7 +6,7 @@ import { EditStudy } from "./components/pages/edit-study";
 import { StudyApproval } from "./components/pages/study-approval";
 import { StudyRules } from "./components/pages/study-rules";
 import { SessionManagement } from "./components/pages/session-management";
-import { TrainingOnboarding } from "./compenents/pages/training-onboarding";
+import { TrainingOnboarding } from "./components/pages/training-onboarding";
 import AdminDashboard from "./components/admin/AdminDashboard";
 import CreateEditStudy from "./components/admin/CreateEditStudy";
 import CreateTimeslot from "./components/admin/CreateTimeslot";
