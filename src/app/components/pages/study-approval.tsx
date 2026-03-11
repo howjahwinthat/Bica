@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { useNavigate } from "react-router";
-import { Card } from "../components/ui/card";
-import { Badge } from "../components/ui/badge";
-import { Button } from "../components/ui/button";
-import { Textarea } from "../components/ui/textarea";
-import { Label } from "../components/ui/label";
+import { Card } from "../ui/card";
+import { Badge } from "../ui/badge";
+import { Button } from "../ui/button";
+import { Textarea } from "../ui/textarea";
+import { Label } from "../ui/label";
 import { ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 
