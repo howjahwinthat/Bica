@@ -27,13 +27,6 @@ import { ProtectedRoute } from "./components/ProtectedRoute";
   element: <Home />,
 },
 
-export const router = createBrowserRouter([
-  // ─── Root: role-based redirect ────────────────────────────────────────────
-  {
-    path: "/",
-    element: <RoleRedirect />,
-  },
-
   // ─── All routes with sidebar (AdminLayout) ────────────────────────────────
   {
     Component: AdminLayout,
