@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate, useParams } from "react-router-dom";
-import { Card } from "@/app/components/ui/card";
-import { Input } from "@/app/components/ui/input";
-import { Label } from "@/app/components/ui/label";
-import { Button } from "@/app/components/ui/button";
-import { Textarea } from "@/app/components/ui/textarea";
-import { useAuth } from "@/app/context/AuthContext";
+import { useNavigate, useParams } from "react-router";
+import { Card } from "../ui/card";
+import { Input } from "../ui/input";
+import { Label } from "../ui/label";
+import { Button } from "../ui/button";
+import { Textarea } from "../ui/textarea";
+import { useAuth } from "../../context/AuthContext";
 import { ArrowLeft } from "lucide-react";
 
 interface TimeslotData {
@@ -206,6 +206,7 @@ const CreateEditStudy: React.FC = () => {
                     onChange={e =>
                       updateTimeslot(idx, { ...slot, room_id: Number(e.target.value) })
                     }
+                    className="block w-full mt-1 p-2 border rounded"
                     required
                   >
                     <option value="">Select Room</option>
