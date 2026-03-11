@@ -1,4 +1,4 @@
-import Home from "./components/ui/Home";
+import Home from "./components/Home";
 import { createBrowserRouter, Navigate } from "react-router";
 import { AdminLayout } from "./components/admin-layout";
 import { Dashboard } from "./components/pages/dashboard";
