@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { format, parseISO, addMinutes, isBefore } from "date-fns";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate } from "react-router";
 
 interface Room {
   id: number;
@@ -195,3 +195,4 @@ const EditTimeslot: React.FC = () => {
 };
 
 export default EditTimeslot;
+
