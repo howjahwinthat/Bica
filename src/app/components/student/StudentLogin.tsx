@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/app/components/ui/button';
@@ -7,9 +6,9 @@ import { Label } from '@/app/components/ui/label';
 import { Card } from '@/app/components/ui/card';
 import { Checkbox } from '@/app/components/ui/checkbox';
 import { useAuth } from '@/app/context/AuthContext';
-import { ArrowLeft, GraduationCap } from 'lucide-react';
+import { ArrowLeft, ShieldCheck } from 'lucide-react';
 
-export default function StudentLogin() {
+export default function AdminLogin() {
   const navigate = useNavigate();
   const { login, user } = useAuth();
 
@@ -19,10 +18,9 @@ export default function StudentLogin() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  // 🔐 Auto-redirect if already logged in
   useEffect(() => {
-    if (user && user.role === 'student') {
-      navigate('/student/dashboard');
+    if (user && user.role === 'admin') {
+      navigate('/admin/dashboard');
     }
   }, [user, navigate]);
 
@@ -32,7 +30,7 @@ export default function StudentLogin() {
     setError('');
 
     try {
-      const response = await fetch('http://localhost:3600/api/student/login', {
+      const response = await fetch('http://localhost:3600/api/auth/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -49,7 +47,7 @@ export default function StudentLogin() {
       // ✅ Save token via AuthContext
       login(data.user, data.token, rememberMe);
 
-      navigate('/student/dashboard');
+      navigate('/admin/dashboard');
     } catch (err: any) {
       console.error(err);
       setError(err.message || 'Login failed');
@@ -59,10 +57,10 @@ export default function StudentLogin() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50 flex items-center justify-center p-4">
       <div className="max-w-md w-full">
         <div className="mb-6">
-          <Link to="/" className="inline-flex items-center text-blue-600 hover:text-blue-700">
+          <Link to="/" className="inline-flex items-center text-purple-600 hover:text-purple-700">
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back to Home
           </Link>
@@ -70,10 +68,10 @@ export default function StudentLogin() {
 
         <Card className="p-8">
           <div className="flex flex-col items-center mb-6">
-            <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-4">
-              <GraduationCap className="w-8 h-8 text-blue-600" />
+            <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mb-4">
+              <ShieldCheck className="w-8 h-8 text-purple-600" />
             </div>
-            <h1 className="text-2xl font-semibold">Student Login</h1>
+            <h1 className="text-2xl font-semibold">Admin Login</h1>
           </div>
 
           {error && (
@@ -90,7 +88,7 @@ export default function StudentLogin() {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="student@university.edu"
+                placeholder="admin@example.com"
                 required
                 className="mt-1"
               />
@@ -122,19 +120,12 @@ export default function StudentLogin() {
 
             <Button
               type="submit"
-              className="w-full bg-blue-600 hover:bg-blue-700"
+              className="w-full bg-purple-600 hover:bg-purple-700"
               disabled={loading}
             >
               {loading ? 'Logging in...' : 'Login'}
             </Button>
           </form>
-
-          <p className="text-center mt-4 text-sm text-gray-600">
-            Don't have an account?{' '}
-            <Link to="/student/signup" className="text-blue-600 hover:underline">
-              Sign Up
-            </Link>
-          </p>
         </Card>
       </div>
     </div>
