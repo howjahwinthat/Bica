@@ -18,7 +18,7 @@ export function AdminLayout() {
   const navigate = useNavigate();
 
   const navItems = [
-    { path: "/", label: "Dashboard", icon: Home },
+    { path: "/dashboard", label: "Dashboard", icon: Home },
     { path: "/create-study", label: "Create Study", icon: FileText },
     { path: "/edit-study", label: "Edit Study", icon: Edit3 },
     { path: "/study-approval", label: "Study Approval", icon: CheckCircle },
