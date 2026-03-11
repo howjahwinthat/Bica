@@ -19,24 +19,13 @@ import StudentLogin from "./components/student/StudentLogin";
 import StudentDashboard from "./components/student/StudentDashboard";
 import StudyDetails from "./components/student/StudyDetails";
 import { ProtectedRoute } from "./components/ProtectedRoute";
-import { useAuth } from "./context/AuthContext";
-import { useState, useEffect } from "react";
 
-function RoleRedirect() {
-  const { user } = useAuth();
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    // Give AuthContext one tick to load the token
-    setLoading(false);
-  }, []);
-
-  if (loading) return null; // or a spinner
-
-  if (user?.role === "admin") return <Navigate to="/admin/dashboard" replace />;
-  if (user?.role === "student") return <Navigate to="/student/dashboard" replace />;
-  return <Navigate to="/student/login" replace />;
-}
+// Remove RoleRedirect entirely, and change the root route to:
+{
+  path: "/",
+  element: <Home />,
+},
 
 export const router = createBrowserRouter([
   // ─── Root: role-based redirect ────────────────────────────────────────────
