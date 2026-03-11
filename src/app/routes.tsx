@@ -17,7 +17,7 @@ import StudentSignup from "./components/student/StudentSignup";
 import StudentLogin from "./components/student/StudentLogin";
 import StudentDashboard from "./components/student/StudentDashboard";
 import StudyDetails from "./components/student/StudyDetails";
-import ProtectedRoute from "./components/ProtectedRoute";
+import { ProtectedRoute } from "./components/ProtectedRoute";
 
 // RoleRedirect: reads the current user's role and sends them to the right home page.
 // Replace the role-detection logic here with however your app stores auth state
