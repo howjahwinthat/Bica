@@ -6,9 +6,9 @@ import { Label } from '@/app/components/ui/label';
 import { Card } from '@/app/components/ui/card';
 import { Checkbox } from '@/app/components/ui/checkbox';
 import { useAuth } from '@/app/context/AuthContext';
-import { ArrowLeft, ShieldCheck } from 'lucide-react';
+import { ArrowLeft, GraduationCap } from 'lucide-react';
 
-export default function AdminLogin() {
+export default function StudentLogin() {
   const navigate = useNavigate();
   const { login, user } = useAuth();
 
@@ -19,8 +19,8 @@ export default function AdminLogin() {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    if (user && user.role === 'admin') {
-      navigate('/admin/dashboard');
+    if (user && user.role === 'student') {
+      navigate('/student/dashboard');
     }
   }, [user, navigate]);
 
@@ -30,7 +30,7 @@ export default function AdminLogin() {
     setError('');
 
     try {
-      const response = await fetch('http://localhost:3600/api/auth/login', {
+      const response = await fetch('http://localhost:3600/api/student/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -47,7 +47,7 @@ export default function AdminLogin() {
       // ✅ Save token via AuthContext
       login(data.user, data.token, rememberMe);
 
-      navigate('/admin/dashboard');
+      navigate('/student/dashboard');
     } catch (err: any) {
       console.error(err);
       setError(err.message || 'Login failed');
@@ -57,10 +57,10 @@ export default function AdminLogin() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50 flex items-center justify-center p-4">
       <div className="max-w-md w-full">
         <div className="mb-6">
-          <Link to="/" className="inline-flex items-center text-purple-600 hover:text-purple-700">
+          <Link to="/" className="inline-flex items-center text-blue-600 hover:text-blue-700">
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back to Home
           </Link>
@@ -68,10 +68,10 @@ export default function AdminLogin() {
 
         <Card className="p-8">
           <div className="flex flex-col items-center mb-6">
-            <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mb-4">
-              <ShieldCheck className="w-8 h-8 text-purple-600" />
+            <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-4">
+              <GraduationCap className="w-8 h-8 text-blue-600" />
             </div>
-            <h1 className="text-2xl font-semibold">Admin Login</h1>
+            <h1 className="text-2xl font-semibold">Student Login</h1>
           </div>
 
           {error && (
@@ -88,7 +88,7 @@ export default function AdminLogin() {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="admin@example.com"
+                placeholder="student@example.com"
                 required
                 className="mt-1"
               />
@@ -120,7 +120,7 @@ export default function AdminLogin() {
 
             <Button
               type="submit"
-              className="w-full bg-purple-600 hover:bg-purple-700"
+              className="w-full bg-blue-600 hover:bg-blue-700"
               disabled={loading}
             >
               {loading ? 'Logging in...' : 'Login'}
