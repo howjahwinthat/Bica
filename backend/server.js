@@ -82,6 +82,44 @@ app.post('/api/student/login', async (req, res) => {
 });
 
 // ===============================
+// ADMIN AUTH (DB-backed)
+// ===============================
+app.post('/api/auth/login', async (req, res) => {
+  const { email, password } = req.body;
+  if (!email || !password) {
+    return res.status(400).json({ message: 'Email and password are required' });
+  }
+  try {
+    const [rows] = await db.query(
+      `SELECT * FROM users WHERE email = ? AND role = 'admin'`,
+      [email]
+    );
+    if (!rows.length) {
+      return res.status(401).json({ message: 'Invalid credentials' });
+    }
+    const userRow = rows[0];
+    if (!userRow.is_active) {
+      return res.status(403).json({ message: 'Account is disabled' });
+    }
+    const match = await bcrypt.compare(password, userRow.password_hash);
+    if (!match) {
+      return res.status(401).json({ message: 'Invalid credentials' });
+    }
+    const user = {
+      id: String(userRow.user_id),
+      name: `${userRow.first_name} ${userRow.last_name}`,
+      email: userRow.email,
+      role: 'admin',
+    };
+    const token = jwt.sign(user, process.env.JWT_SECRET || 'secret', { expiresIn: '8h' });
+    res.json({ user, token });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
+});
+
+// ===============================
 // STUDENTS (in-memory, legacy)
 // ===============================
 let students = [];
