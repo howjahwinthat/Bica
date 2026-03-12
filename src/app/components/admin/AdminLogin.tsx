@@ -1,53 +1,56 @@
-import { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router";
-import { Button } from "@/app/components/ui/button";
-import { Input } from "@/app/components/ui/input";
-import { Label } from "@/app/components/ui/label";
-import { Card } from "@/app/components/ui/card";
-import { Checkbox } from "@/app/components/ui/checkbox";
-import { useAuth } from "@/app/context/AuthContext";
-import { ArrowLeft, ShieldCheck } from "lucide-react";
+import { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Button } from '@/app/components/ui/button';
+import { Input } from '@/app/components/ui/input';
+import { Label } from '@/app/components/ui/label';
+import { Card } from '@/app/components/ui/card';
+import { Checkbox } from '@/app/components/ui/checkbox';
+import { useAuth } from '@/app/context/AuthContext';
+import { ArrowLeft, ShieldCheck } from 'lucide-react';
 
-const AdminLogin: React.FC = () => {
+export default function AdminLogin() {
   const navigate = useNavigate();
   const { login, user } = useAuth();
 
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState('');
 
   useEffect(() => {
-    if (user && user.role === "admin") {
-      navigate("/admin/dashboard");
+    if (user && user.role === 'admin') {
+      navigate('/admin/dashboard');
     }
   }, [user, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setError("");
+    setError('');
 
     try {
-      // Hardcoded admin credentials
-      const hardcodedAdmin = {
-        id: "1", // <-- use string here
-        name: "Admin User",
-        email: "admin@example.com",
-        password: "password123",
-        role: "admin",
-      };
+      const response = await fetch('http://localhost:3600/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      });
 
-      if (email === hardcodedAdmin.email && password === hardcodedAdmin.password) {
-        login(hardcodedAdmin, "test-token", rememberMe);
-        navigate("/admin/dashboard");
-      } else {
-        throw new Error("Invalid credentials");
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Invalid credentials');
       }
+
+      // ✅ Save token via AuthContext
+      login(data.user, data.token, rememberMe);
+
+      navigate('/admin/dashboard');
     } catch (err: any) {
       console.error(err);
-      setError(err.message || "Login failed");
+      setError(err.message || 'Login failed');
     } finally {
       setLoading(false);
     }
@@ -57,10 +60,7 @@ const AdminLogin: React.FC = () => {
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50 flex items-center justify-center p-4">
       <div className="max-w-md w-full">
         <div className="mb-6">
-          <Link
-            to="/"
-            className="inline-flex items-center text-purple-600 hover:text-purple-700"
-          >
+          <Link to="/" className="inline-flex items-center text-purple-600 hover:text-purple-700">
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back to Home
           </Link>
@@ -74,7 +74,11 @@ const AdminLogin: React.FC = () => {
             <h1 className="text-2xl font-semibold">Admin Login</h1>
           </div>
 
-          {error && <div className="mb-4 text-sm text-red-600 text-center">{error}</div>}
+          {error && (
+            <div className="mb-4 text-sm text-red-600 text-center">
+              {error}
+            </div>
+          )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
@@ -119,13 +123,11 @@ const AdminLogin: React.FC = () => {
               className="w-full bg-purple-600 hover:bg-purple-700"
               disabled={loading}
             >
-              {loading ? "Logging in..." : "Login"}
+              {loading ? 'Logging in...' : 'Login'}
             </Button>
           </form>
         </Card>
       </div>
     </div>
   );
-};
-
-export default AdminLogin;
+}
