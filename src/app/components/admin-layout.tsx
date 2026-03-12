@@ -55,7 +55,7 @@ export function AdminLayout() {
         `}
       >
         <div className="p-6 border-b border-gray-200 hidden lg:block">
-          <h1 className="text-xl font-bold text-gray-900">SONA Admin</h1>
+          <h1 className="text-xl font-bold text-gray-900">BICA Admin</h1>
           <p className="text-sm text-gray-500">Study Management System</p>
         </div>
 
