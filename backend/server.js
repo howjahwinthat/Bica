@@ -15,20 +15,124 @@ app.use(cors({
 }));
 app.use(express.json());
 
+// ===============================
+// HEALTH CHECK
+// ===============================
 app.get("/", (req, res) => {
   res.send("Backend is running");
 });
 
+// ===============================
+// STUDENT AUTH
+// ===============================
+
+// SIGNUP
+app.post("/api/student/signup", async (req, res) => {
+  const { first_name, last_name, email, password, studentId, course } = req.body;
+
+  if (!first_name || !last_name || !email || !password || !studentId || !course) {
+    return res.status(400).json({ message: "All fields are required" });
+  }
+
+  try {
+    // check existing
+    const [existing] = await db.query(
+      "SELECT user_id FROM users WHERE email = ?",
+      [email]
+    );
+
+    if (existing.length) {
+      return res.status(409).json({ message: "Email already registered" });
+    }
+
+    // hash password
+    const hashed = await bcrypt.hash(password, 10);
+
+    // insert user
+    const [result] = await db.query(
+      `INSERT INTO users (role, first_name, last_name, email, password_hash) 
+       VALUES ('student', ?, ?, ?, ?)`,
+      [first_name, last_name, email, hashed]
+    );
+
+    const user_id = result.insertId;
+
+    // insert student details
+    await db.query(
+      `INSERT INTO students (student_id, student_number, major) 
+       VALUES (?, ?, ?)`,
+      [user_id, studentId, course]
+    );
+
+    res.status(201).json({ message: "Student registered successfully" });
+
+  } catch (err) {
+    console.error("Signup error:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// LOGIN
+app.post("/api/student/login", async (req, res) => {
+  const { email, password } = req.body;
+
+  if (!email || !password) {
+    return res.status(400).json({ message: "Email and password are required" });
+  }
+
+  try {
+    const [rows] = await db.query(
+      "SELECT * FROM users WHERE email = ? AND role = 'student'",
+      [email]
+    );
+
+    if (!rows.length) {
+      return res.status(401).json({ message: "Invalid credentials" });
+    }
+
+    const user = rows[0];
+
+    const match = await bcrypt.compare(password, user.password_hash);
+
+    if (!match) {
+      return res.status(401).json({ message: "Invalid credentials" });
+    }
+
+    const token = jwt.sign(
+      {
+        id: user.user_id,
+        email: user.email,
+        role: "student",
+      },
+      process.env.JWT_SECRET || "secret",
+      { expiresIn: "7d" }
+    );
+
+    res.json({
+      user: {
+        id: user.user_id,
+        name: `${user.first_name} ${user.last_name}`,
+        email: user.email,
+        role: "student",
+      },
+      token,
+    });
+
+  } catch (err) {
+    console.error("Login error:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
 
 // ===============================
-// AUTH LOGIN
+// ADMIN AUTH
 // ===============================
 
 app.post("/api/auth/login", async (req, res) => {
   const { email, password } = req.body;
 
   if (!email || !password) {
-    return res.status(400).json({ message: "Email and password required" });
+    return res.status(400).json({ message: "Email and password are required" });
   }
 
   try {
@@ -42,6 +146,10 @@ app.post("/api/auth/login", async (req, res) => {
     }
 
     const user = rows[0];
+
+    if (user.is_active === 0) {
+      return res.status(403).json({ message: "Account is disabled" });
+    }
 
     const match = await bcrypt.compare(password, user.password_hash);
 
@@ -70,16 +178,16 @@ app.post("/api/auth/login", async (req, res) => {
     });
 
   } catch (err) {
-    console.error(err);
+    console.error("Admin login error:", err);
     res.status(500).json({ message: "Server error" });
   }
 });
-
 
 // ===============================
 // STUDIES
 // ===============================
 
+// GET ALL
 app.get("/api/studies", async (req, res) => {
   try {
     const [rows] = await db.query("SELECT * FROM studies");
@@ -90,6 +198,7 @@ app.get("/api/studies", async (req, res) => {
   }
 });
 
+// GET ONE
 app.get("/api/studies/:id", async (req, res) => {
   try {
     const [rows] = await db.query(
@@ -102,39 +211,25 @@ app.get("/api/studies/:id", async (req, res) => {
     }
 
     res.json(rows[0]);
+
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Server error" });
   }
 });
 
+// CREATE
 app.post("/api/studies", async (req, res) => {
+  const { title, description } = req.body;
+
+  if (!title) {
+    return res.status(400).json({ message: "Title is required" });
+  }
+
   try {
-    const {
-      title,
-      description,
-      researcher_id,
-      credit_value,
-      max_participants,
-      status,
-    } = req.body;
-
-    if (!title) {
-      return res.status(400).json({ message: "Title is required" });
-    }
-
     const [result] = await db.query(
-      `INSERT INTO studies 
-       (title, description, researcher_id, credit_value, max_participants, status)
-       VALUES (?, ?, ?, ?, ?, ?)`,
-      [
-        title,
-        description || null,
-        researcher_id || null,
-        credit_value || null,
-        max_participants || null,
-        status || "draft",
-      ]
+      "INSERT INTO studies (title, description) VALUES (?, ?)",
+      [title, description || null]
     );
 
     const [rows] = await db.query(
@@ -145,44 +240,27 @@ app.post("/api/studies", async (req, res) => {
     res.status(201).json(rows[0]);
 
   } catch (err) {
-    console.error("Create study error:", err);
+    console.error(err);
     res.status(500).json({ message: "Server error" });
   }
 });
 
+// UPDATE
 app.put("/api/studies/:id", async (req, res) => {
-  console.log("PUT /api/studies/:id hit", req.params.id);
-  console.log("body:", req.body);
-  try {
-    const {
-      title,
-      description,
-      credit_value,
-      max_participants,
-      status,
-    } = req.body;
+  const { title, description } = req.body;
 
+  try {
     await db.query(
-      `UPDATE studies 
-       SET title = ?, description = ?, credit_value = ?, 
-           max_participants = ?, status = ?
-       WHERE study_id = ?`,
-      [
-        title,
-        description,
-        credit_value,
-        max_participants,
-        status,
-        req.params.id,
-      ]
+      "UPDATE studies SET title = ?, description = ? WHERE study_id = ?",
+      [title, description, req.params.id]
     );
 
-    const [updated] = await db.query(
+    const [rows] = await db.query(
       "SELECT * FROM studies WHERE study_id = ?",
       [req.params.id]
     );
 
-    res.json(updated[0]);
+    res.json(rows[0]);
 
   } catch (err) {
     console.error(err);
@@ -190,6 +268,7 @@ app.put("/api/studies/:id", async (req, res) => {
   }
 });
 
+// DELETE
 app.delete("/api/studies/:id", async (req, res) => {
   try {
     const [result] = await db.query(
@@ -197,17 +276,17 @@ app.delete("/api/studies/:id", async (req, res) => {
       [req.params.id]
     );
 
-    if (result.affectedRows === 0) {
+    if (!result.affectedRows) {
       return res.status(404).json({ message: "Study not found" });
     }
 
     res.json({ message: "Study deleted successfully" });
+
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Server error" });
   }
 });
-
 
 // ===============================
 // START SERVER
