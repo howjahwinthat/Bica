@@ -1,4 +1,5 @@
-import { createBrowserRouter } from "react-router";
+import { createBrowserRouter } from "react-router-dom";
+
 import { AdminLayout } from "./components/admin-layout";
 import { Dashboard } from "./components/pages/dashboard";
 import { CreateStudy } from "./components/pages/create-study";
@@ -7,59 +8,44 @@ import { StudyApproval } from "./components/pages/study-approval";
 import { StudyRules } from "./components/pages/study-rules";
 import { SessionManagement } from "./components/pages/session-management";
 import { TrainingOnboarding } from "./components/pages/training-onboarding";
+
 import AdminDashboard from "./components/admin/AdminDashboard";
-import CreateEditStudy from "./components/admin/CreateEditStudy";
-import CreateTimeslot from "./components/admin/CreateTimeslot";
-import EditTimeslot from "./components/admin/EditTimeslot";
-import TimeslotList from "./components/admin/TimeslotList";
 import AdminLogin from "./components/admin/AdminLogin";
+
 import Home from "./components/Home";
 import StudentSignup from "./components/student/StudentSignup";
 import StudentLogin from "./components/student/StudentLogin";
 import StudentDashboard from "./components/student/StudentDashboard";
 import StudyDetails from "./components/student/StudyDetails";
+
 import { ProtectedRoute } from "./components/ProtectedRoute";
 
 export const router = createBrowserRouter([
-  // ─── Root: portal/home ───────────────────────────────────────────────────
   {
     path: "/",
     element: <Home />,
   },
 
-  // ─── All routes with sidebar (AdminLayout) ────────────────────────────────
   {
     Component: AdminLayout,
     children: [
       { path: "/dashboard", Component: Dashboard },
       { path: "/create-study", Component: CreateStudy },
-      { path: "/edit-study/:studyId?", Component: EditStudy },
+      { path: "/edit-study", Component: EditStudy },
+      { path: "/edit-study/:studyId", Component: EditStudy },
       { path: "/study-approval", Component: StudyApproval },
-      { path: "/study-rules/:studyId?", Component: StudyRules },
+      { path: "/study-rules/:studyId", Component: StudyRules },
       { path: "/session-management", Component: SessionManagement },
       { path: "/training", Component: TrainingOnboarding },
       { path: "/admin/dashboard", Component: AdminDashboard },
-      { path: "/admin/study/new", Component: CreateEditStudy },
-      { path: "/admin/study/:id", Component: CreateEditStudy },
-      { path: "/admin/timeslot/new", Component: CreateTimeslot },
-      { path: "/admin/timeslot/:id", Component: EditTimeslot },
-      { path: "/admin/timeslots", Component: TimeslotList },
     ],
   },
 
-  // ─── Auth / public routes (no sidebar) ───────────────────────────────────
-  {
-    path: "/admin/login",
-    Component: AdminLogin,
-  },
-  {
-    path: "/student/signup",
-    element: <StudentSignup />,
-  },
-  {
-    path: "/student/login",
-    element: <StudentLogin />,
-  },
+  { path: "/admin/login", Component: AdminLogin },
+
+  { path: "/student/signup", element: <StudentSignup /> },
+  { path: "/student/login", element: <StudentLogin /> },
+
   {
     path: "/student/dashboard",
     element: (
@@ -68,6 +54,7 @@ export const router = createBrowserRouter([
       </ProtectedRoute>
     ),
   },
+
   {
     path: "/student/study/:id",
     element: (
@@ -75,5 +62,10 @@ export const router = createBrowserRouter([
         <StudyDetails />
       </ProtectedRoute>
     ),
+  },
+
+  {
+    path: "*",
+    element: <div className="p-6">Page not found</div>,
   },
 ]);

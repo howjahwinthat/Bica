@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { useNavigate, useOutletContext } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import {
@@ -34,8 +34,8 @@ const modules: ModuleCard[] = [
     to: "/create-study",
   },
   {
-    title: "Edit Study",
-    description: "Modify existing study information and settings",
+    title: "Edit Studies",
+    description: "View and edit existing studies",
     buttonLabel: "Edit Studies",
     buttonColor: "bg-purple-600 hover:bg-purple-700",
     iconBg: "bg-purple-100",
@@ -99,7 +99,6 @@ const AdminDashboard: React.FC = () => {
 
   return (
     <div className="p-8 bg-gray-50 min-h-screen">
-      {/* Header */}
       <div className="mb-8">
         <h1 className="text-4xl font-bold text-gray-900 tracking-tight">
           Study Management Dashboard
@@ -109,33 +108,29 @@ const AdminDashboard: React.FC = () => {
         </p>
       </div>
 
-      {/* Cards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {modules.map((mod) => {
           const Icon = mod.Icon;
+
           return (
             <div
               key={mod.title}
               className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 flex flex-col items-center text-center hover:shadow-md transition-shadow duration-200"
             >
-              {/* Icon */}
               <div
                 className={`w-16 h-16 rounded-full flex items-center justify-center mb-5 ${mod.iconBg}`}
               >
                 <Icon size={28} className={mod.iconColor} />
               </div>
 
-              {/* Title */}
               <h2 className="text-lg font-bold text-gray-900 mb-2">
                 {mod.title}
               </h2>
 
-              {/* Description */}
               <p className="text-gray-500 text-sm leading-relaxed mb-6 flex-1">
                 {mod.description}
               </p>
 
-              {/* Button */}
               <Link to={mod.to} className="w-full">
                 <button
                   className={`w-full py-2.5 px-4 rounded-lg text-white text-sm font-semibold transition-colors duration-150 ${mod.buttonColor}`}

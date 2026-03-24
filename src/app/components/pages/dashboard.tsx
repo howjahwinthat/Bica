@@ -8,8 +8,6 @@ import {
   Settings,
   Calendar,
   GraduationCap,
-  ShieldCheck,
-  Plus,
 } from "lucide-react";
 
 export function Dashboard() {
@@ -21,6 +19,7 @@ export function Dashboard() {
       </header>
 
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+
         <Card className="p-6 flex flex-col items-center hover:shadow-lg transition-shadow">
           <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-4">
             <FileText className="w-8 h-8 text-blue-600" />
@@ -29,7 +28,7 @@ export function Dashboard() {
           <p className="text-gray-600 text-center mb-4">
             Set up a new research study with all required details
           </p>
-          <Link to="/create-study" className="w-full">
+          <Link to="/create-study" className="w-full mt-auto">
             <Button className="w-full bg-blue-600 hover:bg-blue-700">
               Create New Study
             </Button>
@@ -44,7 +43,7 @@ export function Dashboard() {
           <p className="text-gray-600 text-center mb-4">
             Modify existing study information and settings
           </p>
-          <Link to="/edit-study" className="w-full">
+          <Link to="/edit-study" className="w-full mt-auto">
             <Button className="w-full bg-indigo-600 hover:bg-indigo-700">
               Edit Studies
             </Button>
@@ -59,7 +58,7 @@ export function Dashboard() {
           <p className="text-gray-600 text-center mb-4">
             Review and approve pending study requests
           </p>
-          <Link to="/study-approval" className="w-full">
+          <Link to="/study-approval" className="w-full mt-auto">
             <Button className="w-full bg-yellow-600 hover:bg-yellow-700">
               Review Approvals
             </Button>
@@ -74,7 +73,7 @@ export function Dashboard() {
           <p className="text-gray-600 text-center mb-4">
             Set study-specific rules and requirements
           </p>
-          <Link to="/study-rules" className="w-full">
+          <Link to="/study-rules" className="w-full mt-auto">
             <Button className="w-full bg-red-600 hover:bg-red-700">
               Configure Rules
             </Button>
@@ -89,7 +88,7 @@ export function Dashboard() {
           <p className="text-gray-600 text-center mb-4">
             Create and manage study session IDs
           </p>
-          <Link to="/session-management" className="w-full">
+          <Link to="/session-management" className="w-full mt-auto">
             <Button className="w-full bg-green-600 hover:bg-green-700">
               Manage Sessions
             </Button>
@@ -104,12 +103,13 @@ export function Dashboard() {
           <p className="text-gray-600 text-center mb-4">
             Access training and onboarding workflows
           </p>
-          <Link to="/training" className="w-full">
+          <Link to="/training" className="w-full mt-auto">
             <Button className="w-full bg-purple-600 hover:bg-purple-700">
               Start Training
             </Button>
           </Link>
         </Card>
+
       </div>
     </div>
   );
