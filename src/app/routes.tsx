@@ -1,17 +1,17 @@
 import { createBrowserRouter } from "react-router-dom";
 import { AdminLayout } from "./components/admin-layout";
 
-// Pages (from file 2 path convention)
-import { Dashboard } from "./pages/dashboard";
-import { CreateStudy } from "./pages/create-study";
-import { EditStudy } from "./pages/edit-study";
-import { StudyApproval } from "./pages/study-approval";
-import { StudyRules } from "./pages/study-rules";
-import { SessionManagement } from "./pages/session-management";
-import { TrainingOnboarding } from "./pages/training-onboarding";
-import { Attendance } from "./pages/attendance";
-import { CreditManagement } from "./pages/credit-management";
-import { MultiStudyTracking } from "./pages/multi-study-tracking";
+// Pages
+import { Dashboard } from "./components/pages/dashboard";
+import { CreateStudy } from "./components/pages/create-study";
+import { EditStudy } from "./components/pages/edit-study";
+import { StudyApproval } from "./components/pages/study-approval";
+import { StudyRules } from "./components/pages/study-rules";
+import { SessionManagement } from "./components/pages/session-management";
+import { TrainingOnboarding } from "./components/pages/training-onboarding";
+import { Attendance } from "./components/pages/attendance";
+import { CreditManagement } from "./components/pages/credit-management";
+import { MultiStudyTracking } from "./components/pages/multi-study-tracking";
 
 // Admin components
 import AdminDashboard from "./components/admin/AdminDashboard";
@@ -40,45 +40,4 @@ export const router = createBrowserRouter([
     children: [
       { index: true, Component: Dashboard },
       { path: "create-study", Component: CreateStudy },
-      { path: "edit-study/:studyId?", Component: EditStudy },
-      { path: "study-approval", Component: StudyApproval },
-      { path: "study-rules/:studyId?", Component: StudyRules },
-      { path: "session-management", Component: SessionManagement },
-      { path: "training", Component: TrainingOnboarding },
-      { path: "attendance", Component: Attendance },
-      { path: "credit-management", Component: CreditManagement },
-      { path: "multi-study-tracking", Component: MultiStudyTracking },
-    ],
-  },
-  // Admin tools routes
-  { path: "/admin/login", Component: AdminLogin },
-  { path: "/admin/dashboard", Component: AdminDashboard },
-  { path: "/admin/study/new", Component: CreateEditStudy },
-  { path: "/admin/study/:id", Component: CreateEditStudy },
-  { path: "/admin/timeslot/new", Component: CreateTimeslot },
-  { path: "/admin/timeslot/:id", Component: EditTimeslot },
-  { path: "/admin/timeslots", Component: TimeslotList },
-  // Student routes
-  { path: "/student/signup", element: <StudentSignup /> },
-  { path: "/student/login", element: <StudentLogin /> },
-  {
-    path: "/student/dashboard",
-    element: (
-      <ProtectedRoute role="student">
-        <StudentDashboard />
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: "/student/study/:id",
-    element: (
-      <ProtectedRoute role="student">
-        <StudyDetails />
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: "*",
-    element: <div className="p-6">Page not found</div>,
-  },
-]);
+      { path: "edit-stud
