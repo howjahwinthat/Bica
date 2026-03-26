@@ -1,33 +1,33 @@
 import { createBrowserRouter } from "react-router-dom";
-import { AdminLayout } from "./components/admin-layout";
+import { AdminLayout } from "@/app/components/admin-layout";
 
 // Pages
-import { Dashboard } from "./components/pages/dashboard";
-import { CreateStudy } from "./components/pages/create-study";
-import { EditStudy } from "./components/pages/edit-study";
-import { StudyApproval } from "./components/pages/study-approval";
-import { StudyRules } from "./components/pages/study-rules";
-import { SessionManagement } from "./components/pages/session-management";
-import { TrainingOnboarding } from "./components/pages/training-onboarding";
-import { Attendance } from "./components/pages/attendance";
-import { CreditManagement } from "./components/pages/credit-management";
-import { MultiStudyTracking } from "./components/pages/multi-study-tracking";
+import { Dashboard } from "@/app/components/pages/dashboard";
+import { CreateStudy } from "@/app/components/pages/create-study";
+import { EditStudy } from "@/app/components/pages/edit-study";
+import { StudyApproval } from "@/app/components/pages/study-approval";
+import { StudyRules } from "@/app/components/pages/study-rules";
+import { SessionManagement } from "@/app/components/pages/session-management";
+import { TrainingOnboarding } from "@/app/components/pages/training-onboarding";
+import { Attendance } from "@/app/components/pages/attendance";
+import { CreditManagement } from "@/app/components/pages/credit-management";
+import { MultiStudyTracking } from "@/app/components/pages/multi-study-tracking";
 
 // Admin components
-import AdminDashboard from "./components/admin/AdminDashboard";
-import AdminLogin from "./components/admin/AdminLogin";
-import CreateEditStudy from "./components/admin/CreateEditStudy";
-import CreateTimeslot from "./components/admin/CreateTimeslot";
-import EditTimeslot from "./components/admin/EditTimeslot";
-import TimeslotList from "./components/admin/TimeslotList";
+import AdminDashboard from "@/app/components/admin/AdminDashboard";
+import AdminLogin from "@/app/components/admin/AdminLogin";
+import CreateEditStudy from "@/app/components/admin/CreateEditStudy";
+import CreateTimeslot from "@/app/components/admin/CreateTimeslot";
+import EditTimeslot from "@/app/components/admin/EditTimeslot";
+import TimeslotList from "@/app/components/admin/TimeslotList";
 
 // Student components
-import Home from "./components/Home";
-import StudentSignup from "./components/student/StudentSignup";
-import StudentLogin from "./components/student/StudentLogin";
-import StudentDashboard from "./components/student/StudentDashboard";
-import StudyDetails from "./components/student/StudyDetails";
-import { ProtectedRoute } from "./components/ProtectedRoute";
+import Home from "@/app/components/Home";
+import StudentSignup from "@/app/components/student/StudentSignup";
+import StudentLogin from "@/app/components/student/StudentLogin";
+import StudentDashboard from "@/app/components/student/StudentDashboard";
+import StudyDetails from "@/app/components/student/StudyDetails";
+import { ProtectedRoute } from "@/app/components/ProtectedRoute";
 
 export const router = createBrowserRouter([
   {
