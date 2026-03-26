@@ -1,4 +1,5 @@
 // AuthContext.tsx - add isLoading to context
+import React, { createContext, useContext, useState, useEffect } from 'react';
 interface AuthContextType {
   user: User | null;
   isLoading: boolean;
