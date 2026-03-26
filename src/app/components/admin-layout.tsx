@@ -10,6 +10,9 @@ import {
   Menu,
   X,
   LayoutDashboard,
+  ClipboardCheck,
+  Award,
+  BarChart3,
 } from "lucide-react";
 import { useState } from "react";
 
@@ -25,6 +28,12 @@ export function AdminLayout() {
     { path: "/study-rules", label: "Study Rules", icon: Settings },
     { path: "/session-management", label: "Session Management", icon: Calendar },
     { path: "/training", label: "Training & Onboarding", icon: GraduationCap },
+  ];
+
+  const attendanceAndCreditItems = [
+    { path: "/attendance", label: "Mark Attendance", icon: ClipboardCheck },
+    { path: "/credit-management", label: "Credit Management", icon: Award },
+    { path: "/multi-study-tracking", label: "Multi-Study Tracking", icon: BarChart3 },
   ];
 
   const importedAdminItems = [
@@ -69,12 +78,38 @@ export function AdminLayout() {
                   <li key={item.path}>
                     <NavLink
                       to={item.path}
-                      end={item.path === "/"}
                       onClick={() => setSidebarOpen(false)}
                       className={({ isActive }) =>
                         `flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
                           isActive
                             ? "bg-blue-50 text-blue-700"
+                            : "text-gray-700 hover:bg-gray-100"
+                        }`
+                      }
+                    >
+                      <Icon size={20} />
+                      <span className="text-sm font-medium">{item.label}</span>
+                    </NavLink>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+
+          <div className="mb-6">
+            <h3 className="text-xs font-semibold text-gray-500 uppercase mb-2 px-4">Attendance & Credits</h3>
+            <ul className="space-y-1">
+              {attendanceAndCreditItems.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <li key={item.path}>
+                    <NavLink
+                      to={item.path}
+                      onClick={() => setSidebarOpen(false)}
+                      className={({ isActive }) =>
+                        `flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
+                          isActive
+                            ? "bg-green-50 text-green-700"
                             : "text-gray-700 hover:bg-gray-100"
                         }`
                       }
