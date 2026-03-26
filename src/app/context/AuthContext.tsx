@@ -1,5 +1,17 @@
-// AuthContext.tsx - add isLoading to context
 import React, { createContext, useContext, useState, useEffect } from 'react';
+
+export type Role = 'student' | 'admin' | 'researcher';
+
+export interface User {
+  id: string;
+  name: string;
+  email: string;
+  role: Role;
+  studentId?: string;
+  course?: string;
+  credits?: number;
+}
+
 interface AuthContextType {
   user: User | null;
   isLoading: boolean;
@@ -9,9 +21,25 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// 🔐 Decode JWT safely — must be defined BEFORE AuthProvider
+function decodeToken(token: string): User | null {
+  if (!token) return null;
+  try {
+    const payloadBase64 = token.split('.')[1];
+    if (!payloadBase64) return null;
+    const payload = JSON.parse(
+      atob(payloadBase64.replace(/-/g, '+').replace(/_/g, '/'))
+    );
+    return payload as User;
+  } catch (e) {
+    console.error('Failed to decode token:', e);
+    return null;
+  }
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true); // start true
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const storedToken = localStorage.getItem('token') || sessionStorage.getItem('token');
@@ -21,7 +49,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(decoded);
       }
     }
-    setIsLoading(false); // done checking
+    setIsLoading(false);
   }, []);
 
   const login = (user: User, token: string, remember = false) => {
