@@ -10,12 +10,20 @@ import {
   Menu,
   X,
   LayoutDashboard,
+  LogOut,
 } from "lucide-react";
 import { useState } from "react";
+import { useAuth } from "@/app/context/AuthContext";
 
 export function AdminLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const navigate = useNavigate();
+  const { logout } = useAuth();
+
+  const handleLogout = () => {
+    logout();
+    window.location.href = "/";
+  };
 
   const navItems = [
     { path: "/dashboard", label: "Dashboard", icon: Home },
@@ -51,7 +59,7 @@ export function AdminLayout() {
           fixed top-0 left-0 h-full w-64 bg-white border-r border-gray-200 
           transform transition-transform duration-200 ease-in-out z-10
           ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
-          lg:translate-x-0 lg:pt-0 pt-16 overflow-y-auto
+          lg:translate-x-0 lg:pt-0 pt-16 overflow-y-auto flex flex-col
         `}
       >
         <div className="p-6 border-b border-gray-200 hidden lg:block">
@@ -59,7 +67,7 @@ export function AdminLayout() {
           <p className="text-sm text-gray-500">Study Management System</p>
         </div>
 
-        <nav className="p-4">
+        <nav className="p-4 flex flex-col flex-1">
           <div className="mb-6">
             <h3 className="text-xs font-semibold text-gray-500 uppercase mb-2 px-4">Main Modules</h3>
             <ul className="space-y-1">
@@ -113,6 +121,17 @@ export function AdminLayout() {
                 );
               })}
             </ul>
+          </div>
+
+          {/* Logout at bottom of sidebar */}
+          <div className="mt-auto pt-4 border-t border-gray-200">
+            <button
+              onClick={handleLogout}
+              className="flex items-center gap-3 px-4 py-3 rounded-lg w-full text-red-600 hover:bg-red-50 transition-colors"
+            >
+              <LogOut size={20} />
+              <span className="text-sm font-medium">Log Out</span>
+            </button>
           </div>
         </nav>
       </aside>

@@ -26,7 +26,6 @@ app.get("/", (req, res) => {
 // STUDENT AUTH
 // ===============================
 
-// SIGNUP
 app.post("/api/student/signup", async (req, res) => {
   const { first_name, last_name, email, password, studentId, course } = req.body;
 
@@ -35,7 +34,6 @@ app.post("/api/student/signup", async (req, res) => {
   }
 
   try {
-    // check existing
     const [existing] = await db.query(
       "SELECT user_id FROM users WHERE email = ?",
       [email]
@@ -45,10 +43,8 @@ app.post("/api/student/signup", async (req, res) => {
       return res.status(409).json({ message: "Email already registered" });
     }
 
-    // hash password
     const hashed = await bcrypt.hash(password, 10);
 
-    // insert user
     const [result] = await db.query(
       `INSERT INTO users (role, first_name, last_name, email, password_hash) 
        VALUES ('student', ?, ?, ?, ?)`,
@@ -57,7 +53,6 @@ app.post("/api/student/signup", async (req, res) => {
 
     const user_id = result.insertId;
 
-    // insert student details
     await db.query(
       `INSERT INTO students (student_id, student_number, major) 
        VALUES (?, ?, ?)`,
@@ -72,7 +67,6 @@ app.post("/api/student/signup", async (req, res) => {
   }
 });
 
-// LOGIN
 app.post("/api/student/login", async (req, res) => {
   const { email, password } = req.body;
 
@@ -91,7 +85,6 @@ app.post("/api/student/login", async (req, res) => {
     }
 
     const user = rows[0];
-
     const match = await bcrypt.compare(password, user.password_hash);
 
     if (!match) {
@@ -99,11 +92,7 @@ app.post("/api/student/login", async (req, res) => {
     }
 
     const token = jwt.sign(
-      {
-        id: user.user_id,
-        email: user.email,
-        role: "student",
-      },
+      { id: user.user_id, email: user.email, role: "student" },
       process.env.JWT_SECRET || "secret",
       { expiresIn: "7d" }
     );
@@ -158,11 +147,7 @@ app.post("/api/auth/login", async (req, res) => {
     }
 
     const token = jwt.sign(
-      {
-        id: user.user_id,
-        email: user.email,
-        role: "admin",
-      },
+      { id: user.user_id, email: user.email, role: "admin" },
       process.env.JWT_SECRET || "secret",
       { expiresIn: "8h" }
     );
@@ -220,7 +205,7 @@ app.get("/api/studies/:id", async (req, res) => {
 
 // CREATE
 app.post("/api/studies", async (req, res) => {
-  const { title, description } = req.body;
+  const { title, description, proctor, department, studyType, duration, credits, eligibilityCriteria, isActive, requiresPrescreen } = req.body;
 
   if (!title) {
     return res.status(400).json({ message: "Title is required" });
@@ -228,17 +213,13 @@ app.post("/api/studies", async (req, res) => {
 
   try {
     const [result] = await db.query(
-      "INSERT INTO studies (title, description) VALUES (?, ?)",
-      [title, description || null]
+      `INSERT INTO studies (title, description, proctor, department, study_type, duration, credit_value, eligibility_criteria, is_active, requires_prescreen) 
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [title, description || null, proctor || null, department || null, studyType || null, duration || null, credits || null, eligibilityCriteria || null, isActive ? 1 : 0, requiresPrescreen ? 1 : 0]
     );
 
-    const [rows] = await db.query(
-      "SELECT * FROM studies WHERE study_id = ?",
-      [result.insertId]
-    );
-
+    const [rows] = await db.query("SELECT * FROM studies WHERE study_id = ?", [result.insertId]);
     res.status(201).json(rows[0]);
-
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Server error" });
@@ -247,27 +228,22 @@ app.post("/api/studies", async (req, res) => {
 
 // UPDATE
 app.put("/api/studies/:id", async (req, res) => {
-  const { title, description } = req.body;
+  const { title, description, proctor, department, studyType, duration, credits, eligibilityCriteria, isActive, requiresPrescreen } = req.body;
 
   try {
     await db.query(
-      "UPDATE studies SET title = ?, description = ? WHERE study_id = ?",
-      [title, description, req.params.id]
+      `UPDATE studies SET title = ?, description = ?, proctor = ?, department = ?, study_type = ?, duration = ?, credit_value = ?, eligibility_criteria = ?, is_active = ?, requires_prescreen = ? 
+       WHERE study_id = ?`,
+      [title, description || null, proctor || null, department || null, studyType || null, duration || null, credits || null, eligibilityCriteria || null, isActive ? 1 : 0, requiresPrescreen ? 1 : 0, req.params.id]
     );
 
-    const [rows] = await db.query(
-      "SELECT * FROM studies WHERE study_id = ?",
-      [req.params.id]
-    );
-
+    const [rows] = await db.query("SELECT * FROM studies WHERE study_id = ?", [req.params.id]);
     res.json(rows[0]);
-
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Server error" });
   }
 });
-
 // DELETE
 app.delete("/api/studies/:id", async (req, res) => {
   try {

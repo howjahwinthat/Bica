@@ -15,7 +15,6 @@ export function Dashboard() {
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50 p-6">
       <header className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900">Study Management Dashboard</h1>
-        <p className="text-gray-600 mt-2">Manage studies, approvals, and training workflows</p>
       </header>
 
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">

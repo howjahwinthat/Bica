@@ -10,7 +10,7 @@ import { ArrowLeft } from "lucide-react";
 
 type StudyFormData = {
   title: string;
-  principalInvestigator: string;
+  proctor: string;
   department: string;
   studyType: string;
   duration: string;
@@ -40,7 +40,18 @@ export function CreateStudy() {
       const res = await fetch("http://localhost:3600/api/studies", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
+        body: JSON.stringify({
+          title: data.title,
+          proctor: data.proctor,
+          department: data.department,
+          studyType: data.studyType,
+          duration: data.duration,
+          credits: data.credits,
+          description: data.description,
+          eligibilityCriteria: data.eligibilityCriteria,
+          isActive: data.isActive,
+          requiresPrescreen: data.requiresPrescreen,
+        }),
       });
 
       if (!res.ok) {
@@ -88,15 +99,15 @@ export function CreateStudy() {
             </div>
 
             <div>
-              <Label>Principal Investigator *</Label>
+              <Label>Proctor *</Label>
               <Input
-                {...register("principalInvestigator", {
-                  required: "PI name is required",
+                {...register("proctor", {
+                  required: "Proctor name is required",
                 })}
               />
-              {errors.principalInvestigator && (
+              {errors.proctor && (
                 <p className="text-sm text-red-600 mt-1">
-                  {errors.principalInvestigator.message}
+                  {errors.proctor.message}
                 </p>
               )}
             </div>
@@ -112,9 +123,15 @@ export function CreateStudy() {
                 <option value="">Select department</option>
                 <option value="Psychology">Psychology</option>
                 <option value="Computer Science">Computer Science</option>
+                <option value="Cyber Security">Cyber Security</option>
+                <option value="Information Science">Information Science</option>
                 <option value="Biology">Biology</option>
                 <option value="Business">Business</option>
                 <option value="English">English</option>
+                <option value="History">History</option>
+                <option value="Chemistry">Chemistry</option>
+                <option value="Accounting">Accounting</option>
+                <option value="Communication">Communication</option>
               </select>
               {errors.department && (
                 <p className="text-sm text-red-600 mt-1">
