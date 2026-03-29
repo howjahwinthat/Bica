@@ -205,7 +205,11 @@ app.get("/api/studies/:id", async (req, res) => {
 
 // CREATE
 app.post("/api/studies", async (req, res) => {
-  const { title, description, proctor, department, studyType, duration, credits, eligibilityCriteria, isActive, requiresPrescreen } = req.body;
+  const {
+    title, description, proctor, department, studyType,
+    duration, credits, eligibilityCriteria, isActive,
+    requiresPrescreen, building, roomNumber,
+  } = req.body;
 
   if (!title) {
     return res.status(400).json({ message: "Title is required" });
@@ -213,9 +217,16 @@ app.post("/api/studies", async (req, res) => {
 
   try {
     const [result] = await db.query(
-      `INSERT INTO studies (title, description, proctor, department, study_type, duration, credit_value, eligibility_criteria, is_active, requires_prescreen) 
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [title, description || null, proctor || null, department || null, studyType || null, duration || null, credits || null, eligibilityCriteria || null, isActive ? 1 : 0, requiresPrescreen ? 1 : 0]
+      `INSERT INTO studies 
+        (title, description, proctor, department, study_type, duration, credit_value, 
+         eligibility_criteria, is_active, requires_prescreen, building, room_number, status) 
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'draft')`,
+      [
+        title, description || null, proctor || null, department || null,
+        studyType || null, duration || null, credits || null,
+        eligibilityCriteria || null, isActive ? 1 : 0,
+        requiresPrescreen ? 1 : 0, building || null, roomNumber || null,
+      ]
     );
 
     const [rows] = await db.query("SELECT * FROM studies WHERE study_id = ?", [result.insertId]);
@@ -228,13 +239,38 @@ app.post("/api/studies", async (req, res) => {
 
 // UPDATE
 app.put("/api/studies/:id", async (req, res) => {
-  const { title, description, proctor, department, studyType, duration, credits, eligibilityCriteria, isActive, requiresPrescreen } = req.body;
+  const {
+    title, description, proctor, department, study_type, studyType,
+    duration, credits, credit_value, eligibility_criteria, eligibilityCriteria,
+    is_active, isActive, requires_prescreen, requiresPrescreen,
+    is_open, building, room_number, roomNumber, status,
+  } = req.body;
 
   try {
     await db.query(
-      `UPDATE studies SET title = ?, description = ?, proctor = ?, department = ?, study_type = ?, duration = ?, credit_value = ?, eligibility_criteria = ?, is_active = ?, requires_prescreen = ? 
+      `UPDATE studies SET 
+        title = ?, description = ?, proctor = ?, department = ?, 
+        study_type = ?, duration = ?, credit_value = ?, 
+        eligibility_criteria = ?, is_active = ?, requires_prescreen = ?,
+        is_open = ?, building = ?, room_number = ?, status = ?
        WHERE study_id = ?`,
-      [title, description || null, proctor || null, department || null, studyType || null, duration || null, credits || null, eligibilityCriteria || null, isActive ? 1 : 0, requiresPrescreen ? 1 : 0, req.params.id]
+      [
+        title,
+        description || null,
+        proctor || null,
+        department || null,
+        studyType || study_type || null,
+        duration || null,
+        credits || credit_value || null,
+        eligibilityCriteria || eligibility_criteria || null,
+        (isActive !== undefined ? isActive : is_active) ? 1 : 0,
+        (requiresPrescreen !== undefined ? requiresPrescreen : requires_prescreen) ? 1 : 0,
+        is_open ? 1 : 0,
+        building || null,
+        roomNumber || room_number || null,
+        status !== undefined ? status : null,
+        req.params.id,
+      ]
     );
 
     const [rows] = await db.query("SELECT * FROM studies WHERE study_id = ?", [req.params.id]);
@@ -244,6 +280,7 @@ app.put("/api/studies/:id", async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 });
+
 // DELETE
 app.delete("/api/studies/:id", async (req, res) => {
   try {

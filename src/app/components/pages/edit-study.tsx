@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { Card } from "../ui/card";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
+import { Textarea } from "../ui/textarea";
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
 import { ArrowLeft } from "lucide-react";
@@ -12,11 +13,18 @@ type Study = {
   study_id: number;
   title: string;
   description: string;
+  eligibility_criteria: string;
+  proctor: string;
+  department: string;
+  study_type: string;
+  duration: string;
   researcher_id: number | null;
   credit_value: number | null;
   max_participants: number | null;
   status: string;
   created_at: string;
+  is_active: boolean;
+  requires_prescreen: boolean;
 };
 
 export function EditStudy() {
@@ -93,7 +101,7 @@ export function EditStudy() {
 
   if (loading) return <div className="p-6">Loading...</div>;
 
-  // LIST VIEW — no studyId in URL
+  // LIST VIEW
   if (!studyId) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50 p-6">
@@ -144,11 +152,11 @@ export function EditStudy() {
     );
   }
 
-  // EDIT VIEW — studyId in URL
+  // EDIT VIEW
   if (!study) return <div className="p-6">Study not found.</div>;
 
   return (
-    <div className="min-h-screen p-6">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50 p-6">
       <div className="max-w-4xl mx-auto">
         <div className="mb-6">
           <Button variant="link" onClick={() => navigate("/edit-study")}>
@@ -166,7 +174,7 @@ export function EditStudy() {
 
           <div className="space-y-4">
             <div>
-              <Label>Title</Label>
+              <Label>Study Name *</Label>
               <Input
                 value={study.title || ""}
                 onChange={(e) => setStudy({ ...study, title: e.target.value })}
@@ -174,24 +182,79 @@ export function EditStudy() {
             </div>
 
             <div>
-              <Label>Description</Label>
-              <textarea
-                className="w-full p-2 border rounded min-h-[120px]"
-                value={study.description || ""}
-                onChange={(e) => setStudy({ ...study, description: e.target.value })}
+              <Label>Proctor</Label>
+              <Input
+                value={study.proctor || ""}
+                onChange={(e) => setStudy({ ...study, proctor: e.target.value })}
               />
             </div>
 
             <div>
-              <Label>Credit Value</Label>
-              <Input
-                type="number"
-                step="1"
+              <Label>Department</Label>
+              <select
+                className="block w-full mt-1 p-2 border rounded"
+                value={study.department || ""}
+                onChange={(e) => setStudy({ ...study, department: e.target.value })}
+              >
+                <option value="">Select department</option>
+                <option value="Psychology">Psychology</option>
+                <option value="Computer Science">Computer Science</option>
+                <option value="Cyber Security">Cyber Security</option>
+                <option value="Information Science">Information Science</option>
+                <option value="Biology">Biology</option>
+                <option value="Business">Business</option>
+                <option value="English">English</option>
+                <option value="History">History</option>
+                <option value="Chemistry">Chemistry</option>
+                <option value="Accounting">Accounting</option>
+                <option value="Communication">Communication</option>
+              </select>
+            </div>
+
+            <div>
+              <Label>Study Type</Label>
+              <select
+                className="block w-full mt-1 p-2 border rounded"
+                value={study.study_type || ""}
+                onChange={(e) => setStudy({ ...study, study_type: e.target.value })}
+              >
+                <option value="">Select type</option>
+                <option value="online">Online</option>
+                <option value="in-person">In-Person</option>
+                <option value="hybrid">Hybrid</option>
+              </select>
+            </div>
+
+            <div>
+              <Label>Duration</Label>
+              <select
+                className="block w-full mt-1 p-2 border rounded"
+                value={study.duration || ""}
+                onChange={(e) => setStudy({ ...study, duration: e.target.value })}
+              >
+                <option value="">Select duration</option>
+                <option value="15">15 min</option>
+                <option value="30">30 min</option>
+                <option value="45">45 min</option>
+                <option value="60">60 min</option>
+                <option value="90">90 min</option>
+              </select>
+            </div>
+
+            <div>
+              <Label>Credits</Label>
+              <select
+                className="block w-full mt-1 p-2 border rounded"
                 value={study.credit_value ?? ""}
-                onChange={(e) =>
-                  setStudy({ ...study, credit_value: Number(e.target.value) })
-                }
-              />
+                onChange={(e) => setStudy({ ...study, credit_value: Number(e.target.value) })}
+              >
+                <option value="">Select credits</option>
+                <option value="1">1.0</option>
+                <option value="2">2.0</option>
+                <option value="3">3.0</option>
+                <option value="4">4.0</option>
+                <option value="5">5.0</option>
+              </select>
             </div>
 
             <div>
@@ -203,6 +266,44 @@ export function EditStudy() {
                   setStudy({ ...study, max_participants: Number(e.target.value) })
                 }
               />
+            </div>
+
+            <div>
+              <Label>Description</Label>
+              <Textarea
+                rows={4}
+                value={study.description || ""}
+                onChange={(e) => setStudy({ ...study, description: e.target.value })}
+              />
+            </div>
+
+            <div>
+              <Label>Eligibility Criteria</Label>
+              <Textarea
+                rows={3}
+                value={study.eligibility_criteria || ""}
+                onChange={(e) => setStudy({ ...study, eligibility_criteria: e.target.value })}
+              />
+            </div>
+
+            <div className="flex items-center gap-3">
+              <input
+                type="checkbox"
+                id="is_active"
+                checked={study.is_active ?? true}
+                onChange={(e) => setStudy({ ...study, is_active: e.target.checked })}
+              />
+              <Label htmlFor="is_active">Active</Label>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <input
+                type="checkbox"
+                id="requires_prescreen"
+                checked={study.requires_prescreen ?? false}
+                onChange={(e) => setStudy({ ...study, requires_prescreen: e.target.checked })}
+              />
+              <Label htmlFor="requires_prescreen">Requires Prescreen</Label>
             </div>
 
             <Button onClick={handleSave} className="w-full mt-6">

@@ -19,6 +19,8 @@ type StudyFormData = {
   eligibilityCriteria: string;
   isActive: boolean;
   requiresPrescreen: boolean;
+  building: string;
+  roomNumber: string;
 };
 
 export function CreateStudy() {
@@ -51,6 +53,8 @@ export function CreateStudy() {
           eligibilityCriteria: data.eligibilityCriteria,
           isActive: data.isActive,
           requiresPrescreen: data.requiresPrescreen,
+          building: data.building,
+          roomNumber: data.roomNumber,
         }),
       });
 
@@ -92,9 +96,7 @@ export function CreateStudy() {
                 })}
               />
               {errors.title && (
-                <p className="text-sm text-red-600 mt-1">
-                  {errors.title.message}
-                </p>
+                <p className="text-sm text-red-600 mt-1">{errors.title.message}</p>
               )}
             </div>
 
@@ -106,18 +108,14 @@ export function CreateStudy() {
                 })}
               />
               {errors.proctor && (
-                <p className="text-sm text-red-600 mt-1">
-                  {errors.proctor.message}
-                </p>
+                <p className="text-sm text-red-600 mt-1">{errors.proctor.message}</p>
               )}
             </div>
 
             <div>
               <Label>Department *</Label>
               <select
-                {...register("department", {
-                  required: "Department is required",
-                })}
+                {...register("department", { required: "Department is required" })}
                 className="block w-full mt-1 p-2 border rounded"
               >
                 <option value="">Select department</option>
@@ -134,18 +132,14 @@ export function CreateStudy() {
                 <option value="Communication">Communication</option>
               </select>
               {errors.department && (
-                <p className="text-sm text-red-600 mt-1">
-                  {errors.department.message}
-                </p>
+                <p className="text-sm text-red-600 mt-1">{errors.department.message}</p>
               )}
             </div>
 
             <div>
               <Label>Study Type *</Label>
               <select
-                {...register("studyType", {
-                  required: "Study type is required",
-                })}
+                {...register("studyType", { required: "Study type is required" })}
                 className="block w-full mt-1 p-2 border rounded"
               >
                 <option value="">Select type</option>
@@ -154,18 +148,14 @@ export function CreateStudy() {
                 <option value="hybrid">Hybrid</option>
               </select>
               {errors.studyType && (
-                <p className="text-sm text-red-600 mt-1">
-                  {errors.studyType.message}
-                </p>
+                <p className="text-sm text-red-600 mt-1">{errors.studyType.message}</p>
               )}
             </div>
 
             <div>
               <Label>Duration *</Label>
               <select
-                {...register("duration", {
-                  required: "Duration is required",
-                })}
+                {...register("duration", { required: "Duration is required" })}
                 className="block w-full mt-1 p-2 border rounded"
               >
                 <option value="">Select duration</option>
@@ -176,18 +166,14 @@ export function CreateStudy() {
                 <option value="90">90 min</option>
               </select>
               {errors.duration && (
-                <p className="text-sm text-red-600 mt-1">
-                  {errors.duration.message}
-                </p>
+                <p className="text-sm text-red-600 mt-1">{errors.duration.message}</p>
               )}
             </div>
 
             <div>
               <Label>Credits *</Label>
               <select
-                {...register("credits", {
-                  required: "Credits are required",
-                })}
+                {...register("credits", { required: "Credits are required" })}
                 className="block w-full mt-1 p-2 border rounded"
               >
                 <option value="">Select credits</option>
@@ -198,9 +184,39 @@ export function CreateStudy() {
                 <option value="5.0">5.0</option>
               </select>
               {errors.credits && (
-                <p className="text-sm text-red-600 mt-1">
-                  {errors.credits.message}
-                </p>
+                <p className="text-sm text-red-600 mt-1">{errors.credits.message}</p>
+              )}
+            </div>
+
+            <div>
+              <Label>Building *</Label>
+              <select
+                {...register("building", { required: "Building is required" })}
+                className="block w-full mt-1 p-2 border rounded"
+              >
+                <option value="">Select building</option>
+                <option value="Luter">Luter</option>
+                <option value="Forbes">Forbes</option>
+                <option value="McMurran">McMurran</option>
+              </select>
+              {errors.building && (
+                <p className="text-sm text-red-600 mt-1">{errors.building.message}</p>
+              )}
+            </div>
+
+            <div>
+              <Label>Room Number *</Label>
+              <Input
+                type="number"
+                placeholder="e.g. 101"
+                {...register("roomNumber", {
+                  required: "Room number is required",
+                  min: { value: 100, message: "Room number must be between 100 and 300" },
+                  max: { value: 300, message: "Room number must be between 100 and 300" },
+                })}
+              />
+              {errors.roomNumber && (
+                <p className="text-sm text-red-600 mt-1">{errors.roomNumber.message}</p>
               )}
             </div>
 
