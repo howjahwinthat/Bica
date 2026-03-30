@@ -8,6 +8,7 @@ import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
 import { ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
+import { useAuth } from "@/app/context/AuthContext";
 
 type Study = {
   study_id: number;
@@ -30,6 +31,11 @@ type Study = {
 export function EditStudy() {
   const { studyId } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const isRA = user?.role === "researcher";
+
+  const editStudyPath = isRA ? "/ra/edit-study" : "/edit-study";
+  const dashboardPath = isRA ? "/ra/dashboard" : "/dashboard";
 
   const [studies, setStudies] = useState<Study[]>([]);
   const [study, setStudy] = useState<Study | null>(null);
@@ -93,7 +99,7 @@ export function EditStudy() {
       });
       if (!res.ok) throw new Error("Update failed");
       toast.success("Study updated successfully");
-      navigate("/edit-study");
+      navigate(editStudyPath);
     } catch (err: any) {
       toast.error(err.message || "Save failed");
     }
@@ -107,7 +113,7 @@ export function EditStudy() {
       <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50 p-6">
         <div className="max-w-4xl mx-auto">
           <div className="mb-6">
-            <Button variant="link" onClick={() => navigate("/dashboard")}>
+            <Button variant="link" onClick={() => navigate(dashboardPath)}>
               <ArrowLeft className="w-4 h-4 mr-2 inline-block" />
               Back to Dashboard
             </Button>
@@ -130,7 +136,7 @@ export function EditStudy() {
                       <Button
                         size="sm"
                         className="bg-indigo-600 hover:bg-indigo-700"
-                        onClick={() => navigate(`/edit-study/${s.study_id}`)}
+                        onClick={() => navigate(`${editStudyPath}/${s.study_id}`)}
                       >
                         Edit
                       </Button>
@@ -159,7 +165,7 @@ export function EditStudy() {
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50 p-6">
       <div className="max-w-4xl mx-auto">
         <div className="mb-6">
-          <Button variant="link" onClick={() => navigate("/edit-study")}>
+          <Button variant="link" onClick={() => navigate(editStudyPath)}>
             <ArrowLeft className="w-4 h-4 mr-2 inline-block" />
             Back to Studies
           </Button>

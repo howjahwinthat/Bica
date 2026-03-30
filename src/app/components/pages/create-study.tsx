@@ -7,6 +7,7 @@ import { Textarea } from "../ui/textarea";
 import { Button } from "../ui/button";
 import { toast } from "sonner";
 import { ArrowLeft } from "lucide-react";
+import { useAuth } from "@/app/context/AuthContext";
 
 type StudyFormData = {
   title: string;
@@ -25,6 +26,9 @@ type StudyFormData = {
 
 export function CreateStudy() {
   const navigate = useNavigate();
+  const { user } = useAuth();
+
+  const isRA = user?.role === "researcher";
 
   const {
     register,
@@ -67,7 +71,7 @@ export function CreateStudy() {
 
       toast.success("Study created successfully! You can now edit it from the dashboard.");
 
-      navigate("/dashboard");
+      navigate(isRA ? "/ra/dashboard" : "/dashboard");
     } catch (error: any) {
       console.error(error);
       toast.error(error.message || "Something went wrong");
@@ -78,7 +82,7 @@ export function CreateStudy() {
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50 p-6">
       <div className="max-w-4xl mx-auto">
         <div className="mb-6">
-          <Button variant="link" onClick={() => navigate("/dashboard")}>
+          <Button variant="link" onClick={() => navigate(isRA ? "/ra/dashboard" : "/dashboard")}>
             <ArrowLeft className="w-4 h-4 mr-2 inline-block" />
             Back to Dashboard
           </Button>

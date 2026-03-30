@@ -1,5 +1,6 @@
 import { createBrowserRouter } from "react-router-dom";
 import { AdminLayout } from "@/app/components/admin-layout";
+import { RALayout } from "@/app/components/ra/ra-layout";
 
 // Pages
 import { Dashboard } from "@/app/components/pages/dashboard";
@@ -21,6 +22,11 @@ import CreateTimeslot from "@/app/components/admin/CreateTimeslot";
 import EditTimeslot from "@/app/components/admin/EditTimeslot";
 import TimeslotList from "@/app/components/admin/TimeslotList";
 
+// RA components
+import { RALogin } from "@/app/components/ra/ra-login";
+import { RASignup } from "@/app/components/ra/ra-signup";
+import { RADashboard } from "@/app/components/ra/ra-dashboard";
+
 // Student components
 import Home from "@/app/components/Home";
 import StudentSignup from "@/app/components/student/StudentSignup";
@@ -34,6 +40,7 @@ export const router = createBrowserRouter([
     path: "/",
     element: <Home />,
   },
+  // Admin routes
   {
     Component: AdminLayout,
     children: [
@@ -51,12 +58,27 @@ export const router = createBrowserRouter([
       { path: "/admin/timeslots", Component: TimeslotList },
     ],
   },
+  // RA routes
+  {
+    Component: RALayout,
+    children: [
+      { path: "/ra/dashboard", Component: RADashboard },
+      { path: "/ra/create-study", Component: CreateStudy },
+      { path: "/ra/edit-study/:studyId?", Component: EditStudy },
+      { path: "/ra/study-rules/:studyId?", Component: StudyRules },
+      { path: "/ra/session-management", Component: SessionManagement },
+      { path: "/ra/training", Component: TrainingOnboarding },
+    ],
+  },
   // Admin tools routes (outside layout)
   { path: "/admin/login", Component: AdminLogin },
   { path: "/admin/study/new", Component: CreateEditStudy },
   { path: "/admin/study/:id", Component: CreateEditStudy },
   { path: "/admin/timeslot/new", Component: CreateTimeslot },
   { path: "/admin/timeslot/:id", Component: EditTimeslot },
+  // RA auth routes
+  { path: "/ra/login", Component: RALogin },
+  { path: "/ra/signup", Component: RASignup },
   // Student routes
   { path: "/student/signup", element: <StudentSignup /> },
   { path: "/student/login", element: <StudentLogin /> },

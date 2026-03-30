@@ -7,6 +7,7 @@ import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
 import { ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
+import { useAuth } from "@/app/context/AuthContext";
 
 type Rule = {
   id: string;
@@ -24,6 +25,7 @@ const mockStudies = [
 
 export function StudyRules() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [selectedStudy, setSelectedStudy] = useState("1");
   const [rules, setRules] = useState<Rule[]>([
     {
@@ -74,7 +76,7 @@ export function StudyRules() {
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50 p-6">
       <div className="max-w-4xl mx-auto">
         <div className="mb-6">
-          <Button variant="link" onClick={() => navigate("/")}>
+          <Button variant="link" onClick={() => navigate(user?.role === "researcher" ? "/ra/dashboard" : "/dashboard")}>
             <ArrowLeft className="w-4 h-4 mr-2 inline-block" /> Back to Dashboard
           </Button>
         </div>
