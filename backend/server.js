@@ -358,4 +358,21 @@ app.post("/api/training/seed", async (req, res) => {
   } catch (err) { console.error(err); res.status(500).json({ message: "Server error" }); }
 });
 
+// GET student signups
+app.get("/api/student/:studentId/signups", async (req, res) => {
+  try {
+    const [rows] = await db.query(
+      `SELECT sg.*, se.session_date, se.start_time, se.end_time, se.location,
+              st.title AS study_title, st.credit_value
+       FROM signups sg
+       JOIN sessions se ON se.session_id = sg.session_id
+       JOIN studies st ON st.study_id = se.study_id
+       WHERE sg.student_id = ?
+       ORDER BY se.session_date, se.start_time`,
+      [req.params.studentId]
+    );
+    res.json(rows);
+  } catch (err) { console.error(err); res.status(500).json({ message: "Server error" }); }
+});
+
 app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));

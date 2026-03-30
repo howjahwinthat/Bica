@@ -32,7 +32,8 @@ export function AdminLayout() {
     { path: "/study-approval", label: "Study Approval", icon: CheckCircle },
     { path: "/study-rules", label: "Study Rules", icon: Settings },
     { path: "/session-management", label: "Session Management", icon: Calendar },
-    { path: "/training", label: "Training & Onboarding", icon: GraduationCap },
+	{ path: "/calendar", label: "Calendar", icon: Calendar },
+	{ path: "/training", label: "Training & Onboarding", icon: GraduationCap },
   ];
 
   const importedAdminItems = [

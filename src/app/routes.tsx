@@ -21,6 +21,7 @@ import CreateEditStudy from "@/app/components/admin/CreateEditStudy";
 import CreateTimeslot from "@/app/components/admin/CreateTimeslot";
 import EditTimeslot from "@/app/components/admin/EditTimeslot";
 import TimeslotList from "@/app/components/admin/TimeslotList";
+import { AdminCalendar } from "@/app/components/pages/calendar";
 
 // RA components
 import { RALogin } from "@/app/components/ra/ra-login";
@@ -34,6 +35,7 @@ import StudentLogin from "@/app/components/student/StudentLogin";
 import StudentDashboard from "@/app/components/student/StudentDashboard";
 import StudyDetails from "@/app/components/student/StudyDetails";
 import { ProtectedRoute } from "@/app/components/ProtectedRoute";
+import StudentCalendar from "@/app/components/student/StudentCalendar";
 
 export const router = createBrowserRouter([
   {
@@ -56,6 +58,7 @@ export const router = createBrowserRouter([
       { path: "/multi-study-tracking", Component: MultiStudyTracking },
       { path: "/admin/dashboard", Component: AdminDashboard },
       { path: "/admin/timeslots", Component: TimeslotList },
+      { path: "/calendar", Component: AdminCalendar },
     ],
   },
   // RA routes
@@ -81,6 +84,7 @@ export const router = createBrowserRouter([
   { path: "/ra/signup", Component: RASignup },
   // Student routes
   { path: "/student/signup", element: <StudentSignup /> },
+  { path: "/student/calendar", element: <ProtectedRoute role="student"><StudentCalendar /></ProtectedRoute> },
   { path: "/student/login", element: <StudentLogin /> },
   {
     path: "/student/dashboard",

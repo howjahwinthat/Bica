@@ -106,6 +106,14 @@ export default function StudentDashboard() {
           </Card>
         </div>
 
+        <div className="mb-6">
+          <Link to="/student/calendar">
+            <Button variant="outline" className="border-blue-300 text-blue-700 hover:bg-blue-50">
+              <Calendar className="w-4 h-4 mr-2" /> View My Calendar
+            </Button>
+          </Link>
+        </div>
+
         <div>
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-semibold">Available Studies</h2>
