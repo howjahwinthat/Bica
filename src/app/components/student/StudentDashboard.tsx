@@ -3,7 +3,7 @@ import { Button } from '@/app/components/ui/button';
 import { Card } from '@/app/components/ui/card';
 import { Badge } from '@/app/components/ui/badge';
 import { useAuth } from '@/app/context/AuthContext';
-import { LogOut, User, BookOpen, Award, Calendar, Loader2 } from 'lucide-react';
+import { LogOut, User, BookOpen, Award, Calendar, Loader2, Search } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 interface Study {
@@ -15,6 +15,7 @@ interface Study {
   building: string;
   room_number: string;
   study_type: string;
+  department: string;
   status: string;
 }
 
@@ -23,6 +24,12 @@ export default function StudentDashboard() {
   const { user, logout } = useAuth();
   const [studies, setStudies] = useState<Study[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Search and filter state
+  const [search, setSearch] = useState("");
+  const [filterDepartment, setFilterDepartment] = useState("");
+  const [filterType, setFilterType] = useState("");
+  const [filterCredits, setFilterCredits] = useState("");
 
   useEffect(() => {
     if (!user || user.role !== 'student') {
@@ -52,6 +59,14 @@ export default function StudentDashboard() {
     logout();
     navigate('/');
   };
+
+  const filteredStudies = studies.filter((s) => {
+    const matchesSearch = s.title.toLowerCase().includes(search.toLowerCase());
+    const matchesDepartment = filterDepartment ? s.department === filterDepartment : true;
+    const matchesType = filterType ? s.study_type === filterType : true;
+    const matchesCredits = filterCredits ? String(s.credit_value) === filterCredits : true;
+    return matchesSearch && matchesDepartment && matchesType && matchesCredits;
+  });
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -117,7 +132,74 @@ export default function StudentDashboard() {
         <div>
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-semibold">Available Studies</h2>
-            <span className="text-gray-600">{studies.length} studies</span>
+            <span className="text-gray-600">{filteredStudies.length} studies</span>
+          </div>
+
+          {/* Search and Filter */}
+          <div className="space-y-3 mb-6">
+            <div className="relative">
+              <Search className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search by title..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="w-full pl-9 p-2 border rounded bg-white"
+              />
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+              <select
+                value={filterDepartment}
+                onChange={(e) => setFilterDepartment(e.target.value)}
+                className="p-2 border rounded text-sm bg-white"
+              >
+                <option value="">All Departments</option>
+                <option value="Psychology">Psychology</option>
+                <option value="Computer Science">Computer Science</option>
+                <option value="Cyber Security">Cyber Security</option>
+                <option value="Information Science">Information Science</option>
+                <option value="Biology">Biology</option>
+                <option value="Business">Business</option>
+                <option value="English">English</option>
+                <option value="History">History</option>
+                <option value="Chemistry">Chemistry</option>
+                <option value="Accounting">Accounting</option>
+                <option value="Communication">Communication</option>
+              </select>
+              <select
+                value={filterType}
+                onChange={(e) => setFilterType(e.target.value)}
+                className="p-2 border rounded text-sm bg-white"
+              >
+                <option value="">All Types</option>
+                <option value="online">Online</option>
+                <option value="in-person">In-Person</option>
+                <option value="hybrid">Hybrid</option>
+              </select>
+              <select
+                value={filterCredits}
+                onChange={(e) => setFilterCredits(e.target.value)}
+                className="p-2 border rounded text-sm bg-white"
+              >
+                <option value="">All Credits</option>
+                <option value="1">1.0</option>
+                <option value="2">2.0</option>
+                <option value="3">3.0</option>
+                <option value="4">4.0</option>
+                <option value="5">5.0</option>
+              </select>
+            </div>
+            {(search || filterDepartment || filterType || filterCredits) && (
+              <p className="text-sm text-gray-500">
+                Showing {filteredStudies.length} of {studies.length} studies
+                <button
+                  className="ml-2 text-blue-600 hover:underline"
+                  onClick={() => { setSearch(""); setFilterDepartment(""); setFilterType(""); setFilterCredits(""); }}
+                >
+                  Clear filters
+                </button>
+              </p>
+            )}
           </div>
 
           {loading && (
@@ -135,8 +217,16 @@ export default function StudentDashboard() {
             </Card>
           )}
 
+          {!loading && studies.length > 0 && filteredStudies.length === 0 && (
+            <Card className="p-8 text-center text-gray-500">
+              <Search className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+              <p className="font-medium">No studies match your search</p>
+              <p className="text-sm mt-1">Try adjusting your filters.</p>
+            </Card>
+          )}
+
           <div className="space-y-4">
-            {studies.map((study) => (
+            {filteredStudies.map((study) => (
               <Card key={study.study_id} className="p-6 hover:shadow-md transition-shadow">
                 <div className="flex justify-between items-start mb-4">
                   <div className="flex-1">
@@ -159,6 +249,9 @@ export default function StudentDashboard() {
                   )}
                   {study.study_type && (
                     <Badge className="bg-purple-100 text-purple-700 border-purple-200">{study.study_type}</Badge>
+                  )}
+                  {study.department && (
+                    <Badge className="bg-gray-100 text-gray-700 border-gray-200">{study.department}</Badge>
                   )}
                 </div>
                 <div className="flex items-center justify-end">

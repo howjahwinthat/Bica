@@ -3,7 +3,7 @@ import { useNavigate } from "react-router";
 import { Card } from "../ui/card";
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Search } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/app/context/AuthContext";
 
@@ -33,6 +33,13 @@ export function SessionManagement() {
   const [studies, setStudies] = useState<Study[]>([]);
   const [loadingStudies, setLoadingStudies] = useState(true);
   const [togglingId, setTogglingId] = useState<number | null>(null);
+
+  // Search and filter state
+  const [search, setSearch] = useState("");
+  const [filterDepartment, setFilterDepartment] = useState("");
+  const [filterType, setFilterType] = useState("");
+  const [filterCredits, setFilterCredits] = useState("");
+  const [filterOpen, setFilterOpen] = useState("");
 
   useEffect(() => {
     const fetchStudies = async () => {
@@ -76,6 +83,15 @@ export function SessionManagement() {
     }
   };
 
+  const filteredStudies = studies.filter((s) => {
+    const matchesSearch = s.title.toLowerCase().includes(search.toLowerCase());
+    const matchesDepartment = filterDepartment ? s.department === filterDepartment : true;
+    const matchesType = filterType ? s.study_type === filterType : true;
+    const matchesCredits = filterCredits ? String(s.credit_value) === filterCredits : true;
+    const matchesOpen = filterOpen === "open" ? s.is_open : filterOpen === "closed" ? !s.is_open : true;
+    return matchesSearch && matchesDepartment && matchesType && matchesCredits && matchesOpen;
+  });
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50 p-6">
       <div className="max-w-4xl mx-auto">
@@ -88,15 +104,93 @@ export function SessionManagement() {
         <Card className="p-8">
           <h1 className="text-2xl font-semibold mb-6">Session Management</h1>
 
+          {/* Search and Filter */}
+          <div className="space-y-3 mb-6">
+            <div className="relative">
+              <Search className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search by title..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="w-full pl-9 p-2 border rounded"
+              />
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <select
+                value={filterDepartment}
+                onChange={(e) => setFilterDepartment(e.target.value)}
+                className="p-2 border rounded text-sm"
+              >
+                <option value="">All Departments</option>
+                <option value="Psychology">Psychology</option>
+                <option value="Computer Science">Computer Science</option>
+                <option value="Cyber Security">Cyber Security</option>
+                <option value="Information Science">Information Science</option>
+                <option value="Biology">Biology</option>
+                <option value="Business">Business</option>
+                <option value="English">English</option>
+                <option value="History">History</option>
+                <option value="Chemistry">Chemistry</option>
+                <option value="Accounting">Accounting</option>
+                <option value="Communication">Communication</option>
+              </select>
+              <select
+                value={filterType}
+                onChange={(e) => setFilterType(e.target.value)}
+                className="p-2 border rounded text-sm"
+              >
+                <option value="">All Types</option>
+                <option value="online">Online</option>
+                <option value="in-person">In-Person</option>
+                <option value="hybrid">Hybrid</option>
+              </select>
+              <select
+                value={filterCredits}
+                onChange={(e) => setFilterCredits(e.target.value)}
+                className="p-2 border rounded text-sm"
+              >
+                <option value="">All Credits</option>
+                <option value="1">1.0</option>
+                <option value="2">2.0</option>
+                <option value="3">3.0</option>
+                <option value="4">4.0</option>
+                <option value="5">5.0</option>
+              </select>
+              <select
+                value={filterOpen}
+                onChange={(e) => setFilterOpen(e.target.value)}
+                className="p-2 border rounded text-sm"
+              >
+                <option value="">Open & Closed</option>
+                <option value="open">Open Only</option>
+                <option value="closed">Closed Only</option>
+              </select>
+            </div>
+            {(search || filterDepartment || filterType || filterCredits || filterOpen) && (
+              <p className="text-sm text-gray-500">
+                Showing {filteredStudies.length} of {studies.length} studies
+                <button
+                  className="ml-2 text-blue-600 hover:underline"
+                  onClick={() => { setSearch(""); setFilterDepartment(""); setFilterType(""); setFilterCredits(""); setFilterOpen(""); }}
+                >
+                  Clear filters
+                </button>
+              </p>
+            )}
+          </div>
+
           {loadingStudies ? (
             <p className="text-gray-500 text-center py-12">Loading studies...</p>
           ) : studies.length === 0 ? (
             <p className="text-gray-600 text-center py-12">
               No approved studies yet. Approve studies from the Study Approval page first.
             </p>
+          ) : filteredStudies.length === 0 ? (
+            <p className="text-gray-600 text-center py-12">No studies match your search.</p>
           ) : (
             <div className="space-y-4">
-              {studies.map((study) => (
+              {filteredStudies.map((study) => (
                 <div key={study.study_id} className="border p-4 rounded bg-white">
                   <div className="flex items-start justify-between mb-1">
                     <h3 className="text-lg font-semibold">{study.title}</h3>
