@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
@@ -9,7 +9,18 @@ import {
   Settings,
   Calendar,
   GraduationCap,
+  Users,
+  BookOpen,
+  Clock,
+  UserCheck,
 } from "lucide-react";
+
+type Stats = {
+  totalStudies: number;
+  pendingApprovals: number;
+  totalStudents: number;
+  totalRAs: number;
+};
 
 interface ModuleCard {
   title: string;
@@ -83,17 +94,48 @@ const modules: ModuleCard[] = [
     Icon: GraduationCap,
     to: "/training",
   },
+  {
+    title: "User Management",
+    description: "View and manage student and RA accounts",
+    buttonLabel: "Manage Users",
+    buttonColor: "bg-gray-600 hover:bg-gray-700",
+    iconBg: "bg-gray-100",
+    iconColor: "text-gray-500",
+    Icon: Users,
+    to: "/user-management",
+  },
 ];
 
 const AdminDashboard: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const [stats, setStats] = useState<Stats>({
+    totalStudies: 0,
+    pendingApprovals: 0,
+    totalStudents: 0,
+    totalRAs: 0,
+  });
 
   useEffect(() => {
     if (!user || user.role !== "admin") {
       navigate("/admin/login");
     }
   }, [user, navigate]);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const res = await fetch("http://localhost:3600/api/stats");
+        if (res.ok) {
+          const data = await res.json();
+          setStats(data);
+        }
+      } catch (err) {
+        console.error("Failed to load stats");
+      }
+    };
+    fetchStats();
+  }, []);
 
   if (!user || user.role !== "admin") return null;
 
@@ -108,10 +150,41 @@ const AdminDashboard: React.FC = () => {
         </p>
       </div>
 
+      {/* Stats Row */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm text-gray-600">Total Studies</span>
+            <BookOpen className="w-4 h-4 text-blue-600" />
+          </div>
+          <p className="text-2xl font-bold text-blue-700">{stats.totalStudies}</p>
+        </div>
+        <div className="bg-yellow-50 border border-yellow-200 rounded-2xl p-4">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm text-gray-600">Pending Approvals</span>
+            <Clock className="w-4 h-4 text-yellow-600" />
+          </div>
+          <p className="text-2xl font-bold text-yellow-700">{stats.pendingApprovals}</p>
+        </div>
+        <div className="bg-green-50 border border-green-200 rounded-2xl p-4">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm text-gray-600">Total Students</span>
+            <Users className="w-4 h-4 text-green-600" />
+          </div>
+          <p className="text-2xl font-bold text-green-700">{stats.totalStudents}</p>
+        </div>
+        <div className="bg-purple-50 border border-purple-200 rounded-2xl p-4">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm text-gray-600">Total RAs</span>
+            <UserCheck className="w-4 h-4 text-purple-600" />
+          </div>
+          <p className="text-2xl font-bold text-purple-700">{stats.totalRAs}</p>
+        </div>
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {modules.map((mod) => {
           const Icon = mod.Icon;
-
           return (
             <div
               key={mod.title}
@@ -122,15 +195,10 @@ const AdminDashboard: React.FC = () => {
               >
                 <Icon size={28} className={mod.iconColor} />
               </div>
-
-              <h2 className="text-lg font-bold text-gray-900 mb-2">
-                {mod.title}
-              </h2>
-
+              <h2 className="text-lg font-bold text-gray-900 mb-2">{mod.title}</h2>
               <p className="text-gray-500 text-sm leading-relaxed mb-6 flex-1">
                 {mod.description}
               </p>
-
               <Link to={mod.to} className="w-full">
                 <button
                   className={`w-full py-2.5 px-4 rounded-lg text-white text-sm font-semibold transition-colors duration-150 ${mod.buttonColor}`}

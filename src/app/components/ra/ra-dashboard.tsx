@@ -7,6 +7,7 @@ import {
   Settings,
   Calendar,
   GraduationCap,
+  Users,
 } from "lucide-react";
 
 export function RADashboard() {
@@ -70,6 +71,17 @@ export function RADashboard() {
           <p className="text-gray-600 text-center mb-4">Access training and onboarding workflows</p>
           <Link to="/ra/training" className="w-full mt-auto">
             <Button className="w-full bg-purple-600 hover:bg-purple-700">Start Training</Button>
+          </Link>
+        </Card>
+
+        <Card className="p-6 flex flex-col items-center hover:shadow-lg transition-shadow">
+          <div className="w-16 h-16 bg-teal-100 rounded-full flex items-center justify-center mb-4">
+            <Users className="w-8 h-8 text-teal-600" />
+          </div>
+          <h2 className="text-xl font-semibold mb-2">My Participants</h2>
+          <p className="text-gray-600 text-center mb-4">View students signed up for your studies</p>
+          <Link to="/ra/participants" className="w-full mt-auto">
+            <Button className="w-full bg-teal-600 hover:bg-teal-700">View Participants</Button>
           </Link>
         </Card>
       </div>

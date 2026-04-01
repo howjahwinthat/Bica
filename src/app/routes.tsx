@@ -13,6 +13,7 @@ import { TrainingOnboarding } from "@/app/components/pages/training-onboarding";
 import { Attendance } from "@/app/components/pages/attendance";
 import { CreditManagement } from "@/app/components/pages/credit-management";
 import { MultiStudyTracking } from "@/app/components/pages/multi-study-tracking";
+import { UserManagement } from "@/app/components/pages/user-management";
 
 // Admin components
 import AdminDashboard from "@/app/components/admin/AdminDashboard";
@@ -27,6 +28,7 @@ import { AdminCalendar } from "@/app/components/pages/calendar";
 import { RALogin } from "@/app/components/ra/ra-login";
 import { RASignup } from "@/app/components/ra/ra-signup";
 import { RADashboard } from "@/app/components/ra/ra-dashboard";
+import { RAParticipants } from "@/app/components/ra/ra-participants";
 
 // Student components
 import Home from "@/app/components/Home";
@@ -59,6 +61,7 @@ export const router = createBrowserRouter([
       { path: "/admin/dashboard", Component: AdminDashboard },
       { path: "/admin/timeslots", Component: TimeslotList },
       { path: "/calendar", Component: AdminCalendar },
+      { path: "/user-management", Component: UserManagement },
     ],
   },
   // RA routes
@@ -71,6 +74,7 @@ export const router = createBrowserRouter([
       { path: "/ra/study-rules/:studyId?", Component: StudyRules },
       { path: "/ra/session-management", Component: SessionManagement },
       { path: "/ra/training", Component: TrainingOnboarding },
+      { path: "/ra/participants", Component: RAParticipants },
     ],
   },
   // Admin tools routes (outside layout)

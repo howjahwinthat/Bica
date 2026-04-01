@@ -19,13 +19,28 @@ interface Study {
   status: string;
 }
 
+interface Signup {
+  signup_id: number;
+  study_id: number;
+  title: string;
+  credit_value: number;
+  duration: string;
+  building: string;
+  room_number: string;
+  study_type: string;
+  status: string;
+  signed_up_at: string;
+}
+
 export default function StudentDashboard() {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
   const [studies, setStudies] = useState<Study[]>([]);
+  const [signups, setSignups] = useState<Signup[]>([]);
   const [loading, setLoading] = useState(true);
+  const [totalCredits, setTotalCredits] = useState<number>(0);
+  const [signedUpStudyIds, setSignedUpStudyIds] = useState<number[]>([]);
 
-  // Search and filter state
   const [search, setSearch] = useState("");
   const [filterDepartment, setFilterDepartment] = useState("");
   const [filterType, setFilterType] = useState("");
@@ -53,11 +68,59 @@ export default function StudentDashboard() {
     fetchStudies();
   }, []);
 
+  useEffect(() => {
+    const fetchCredits = async () => {
+      if (!user?.id) return;
+      try {
+        const res = await fetch(`http://localhost:3600/api/students/${user.id}/credits`);
+        if (res.ok) {
+          const data = await res.json();
+          setTotalCredits(Number(data.total_credits) || 0);
+        }
+      } catch (err) {
+        console.error('Failed to load credits', err);
+      }
+    };
+    fetchCredits();
+  }, [user]);
+
+  useEffect(() => {
+    const fetchSignups = async () => {
+      if (!user?.id) return;
+      try {
+        const res = await fetch(`http://localhost:3600/api/signups/student/${user.id}`);
+        if (res.ok) {
+          const data = await res.json();
+          setSignups(data);
+          setSignedUpStudyIds(data.map((s: any) => s.study_id));
+        }
+      } catch (err) {
+        console.error('Failed to load signups', err);
+      }
+    };
+    fetchSignups();
+  }, [user]);
+
   if (!user || user.role !== 'student') return null;
 
   const handleLogout = () => {
     logout();
     navigate('/');
+  };
+
+  const getSignupStatusBadge = (status: string) => {
+    switch (status) {
+      case 'registered':
+        return <Badge className="bg-blue-100 text-blue-700 border-blue-200">Registered</Badge>;
+      case 'attended':
+        return <Badge className="bg-green-100 text-green-700 border-green-200">Attended</Badge>;
+      case 'no_show':
+        return <Badge className="bg-red-100 text-red-700 border-red-200">No Show</Badge>;
+      case 'cancelled':
+        return <Badge className="bg-gray-100 text-gray-700 border-gray-200">Cancelled</Badge>;
+      default:
+        return <Badge variant="secondary">{status}</Badge>;
+    }
   };
 
   const filteredStudies = studies.filter((s) => {
@@ -67,6 +130,8 @@ export default function StudentDashboard() {
     const matchesCredits = filterCredits ? String(s.credit_value) === filterCredits : true;
     return matchesSearch && matchesDepartment && matchesType && matchesCredits;
   });
+
+  const activeSignups = signups.filter(s => s.status !== 'cancelled');
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -110,7 +175,7 @@ export default function StudentDashboard() {
               <span className="text-gray-600">Credits Earned</span>
               <Award className="w-5 h-5 text-green-600" />
             </div>
-            <p className="text-3xl font-semibold">0</p>
+            <p className="text-3xl font-semibold">{totalCredits.toFixed(1)}</p>
           </Card>
           <Card className="p-6 bg-purple-50 border-purple-200">
             <div className="flex items-center justify-between mb-2">
@@ -129,13 +194,51 @@ export default function StudentDashboard() {
           </Link>
         </div>
 
+        {/* Registered Studies Section */}
+        {activeSignups.length > 0 && (
+          <div className="mb-10">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-semibold">My Registered Studies</h2>
+              <span className="text-gray-600">{activeSignups.length} registered</span>
+            </div>
+            <div className="space-y-3">
+              {activeSignups.map((signup) => (
+                <Card key={signup.signup_id} className="p-5 border-l-4 border-l-blue-500">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <h3 className="font-semibold">{signup.title}</h3>
+                        {getSignupStatusBadge(signup.status)}
+                      </div>
+                      <div className="flex flex-wrap gap-4 text-sm text-gray-600">
+                        {signup.duration && (
+                          <span><span className="font-medium">Duration:</span> {signup.duration} min</span>
+                        )}
+                        {signup.building && (
+                          <span><span className="font-medium">Location:</span> {signup.building} {signup.room_number}</span>
+                        )}
+                        {signup.credit_value && (
+                          <span><span className="font-medium">Credits:</span> {signup.credit_value}</span>
+                        )}
+                        <span className="text-gray-400">
+                          Registered {new Date(signup.signed_up_at).toLocaleDateString()}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Available Studies Section */}
         <div>
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-semibold">Available Studies</h2>
             <span className="text-gray-600">{filteredStudies.length} studies</span>
           </div>
 
-          {/* Search and Filter */}
           <div className="space-y-3 mb-6">
             <div className="relative">
               <Search className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
@@ -255,9 +358,15 @@ export default function StudentDashboard() {
                   )}
                 </div>
                 <div className="flex items-center justify-end">
-                  <Link to={`/student/study/${study.study_id}`}>
-                    <Button className="bg-blue-600 hover:bg-blue-700">Register</Button>
-                  </Link>
+                  {signedUpStudyIds.includes(study.study_id) ? (
+                    <Button disabled className="bg-gray-400 cursor-not-allowed">
+                      Already Registered
+                    </Button>
+                  ) : (
+                    <Link to={`/student/study/${study.study_id}`}>
+                      <Button className="bg-blue-600 hover:bg-blue-700">Register</Button>
+                    </Link>
+                  )}
                 </div>
               </Card>
             ))}

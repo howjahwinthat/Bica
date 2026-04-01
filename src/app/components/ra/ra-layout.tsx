@@ -9,6 +9,7 @@ import {
   Menu,
   X,
   LogOut,
+  Users,
 } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "@/app/context/AuthContext";
@@ -30,6 +31,7 @@ export function RALayout() {
     { path: "/ra/study-rules", label: "Study Rules", icon: Settings },
     { path: "/ra/session-management", label: "Session Management", icon: Calendar },
     { path: "/ra/training", label: "Training & Onboarding", icon: GraduationCap },
+    { path: "/ra/participants", label: "My Participants", icon: Users },
   ];
 
   return (

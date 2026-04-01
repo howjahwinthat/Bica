@@ -184,6 +184,164 @@ app.delete("/api/studies/:id", async (req, res) => {
 });
 
 // ===============================
+// STATS
+// ===============================
+
+app.get("/api/stats", async (req, res) => {
+  try {
+    const [[{ totalStudies }]] = await db.query("SELECT COUNT(*) as totalStudies FROM studies");
+    const [[{ pendingApprovals }]] = await db.query("SELECT COUNT(*) as pendingApprovals FROM studies WHERE status = 'draft'");
+    const [[{ totalStudents }]] = await db.query("SELECT COUNT(*) as totalStudents FROM users WHERE role = 'student'");
+    const [[{ totalRAs }]] = await db.query("SELECT COUNT(*) as totalRAs FROM users WHERE role = 'researcher'");
+    res.json({ totalStudies, pendingApprovals, totalStudents, totalRAs });
+  } catch (err) { console.error(err); res.status(500).json({ message: "Server error" }); }
+});
+
+// ===============================
+// USER MANAGEMENT
+// ===============================
+
+app.get("/api/users", async (req, res) => {
+  try {
+    const [rows] = await db.query(
+      "SELECT user_id, first_name, last_name, email, role, is_active, created_at FROM users WHERE role IN ('student', 'researcher') ORDER BY created_at DESC"
+    );
+    res.json(rows);
+  } catch (err) { console.error(err); res.status(500).json({ message: "Server error" }); }
+});
+
+app.put("/api/users/:id/toggle", async (req, res) => {
+  const { is_active } = req.body;
+  try {
+    await db.query("UPDATE users SET is_active = ? WHERE user_id = ?", [is_active, req.params.id]);
+    res.json({ message: "User updated" });
+  } catch (err) { console.error(err); res.status(500).json({ message: "Server error" }); }
+});
+
+app.delete("/api/users/:id", async (req, res) => {
+  try {
+    const [result] = await db.query("DELETE FROM users WHERE user_id = ?", [req.params.id]);
+    if (!result.affectedRows) return res.status(404).json({ message: "User not found" });
+    res.json({ message: "User deleted" });
+  } catch (err) { console.error(err); res.status(500).json({ message: "Server error" }); }
+});
+
+// ===============================
+// SIGNUPS
+// ===============================
+
+app.post("/api/signups", async (req, res) => {
+  const { student_id, study_id } = req.body;
+  if (!student_id || !study_id) return res.status(400).json({ message: "Missing required fields" });
+  try {
+    const [existing] = await db.query(
+      "SELECT * FROM signups WHERE student_id = ? AND study_id = ?",
+      [student_id, study_id]
+    );
+    if (existing.length) return res.status(409).json({ message: "Already signed up for this study" });
+    const [result] = await db.query(
+      "INSERT INTO signups (student_id, study_id) VALUES (?, ?)",
+      [student_id, study_id]
+    );
+    res.status(201).json({ message: "Signed up successfully", signup_id: result.insertId });
+  } catch (err) { console.error(err); res.status(500).json({ message: "Server error" }); }
+});
+
+app.get("/api/signups/study/:studyId", async (req, res) => {
+  try {
+    const [rows] = await db.query(
+      `SELECT sg.signup_id, sg.status, sg.signed_up_at,
+              u.user_id, u.first_name, u.last_name, u.email
+       FROM signups sg
+       JOIN users u ON u.user_id = sg.student_id
+       WHERE sg.study_id = ?
+       ORDER BY sg.signed_up_at DESC`,
+      [req.params.studyId]
+    );
+    res.json(rows);
+  } catch (err) { console.error(err); res.status(500).json({ message: "Server error" }); }
+});
+
+app.get("/api/signups/student/:studentId", async (req, res) => {
+  try {
+    const [rows] = await db.query(
+      `SELECT sg.signup_id, sg.status, sg.signed_up_at,
+              st.study_id, st.title, st.credit_value, st.duration, st.building, st.room_number, st.study_type
+       FROM signups sg
+       JOIN studies st ON st.study_id = sg.study_id
+       WHERE sg.student_id = ?
+       ORDER BY sg.signed_up_at DESC`,
+      [req.params.studentId]
+    );
+    res.json(rows);
+  } catch (err) { console.error(err); res.status(500).json({ message: "Server error" }); }
+});
+
+app.put("/api/signups/:signupId/cancel", async (req, res) => {
+  try {
+    await db.query(
+      "UPDATE signups SET status = 'cancelled' WHERE signup_id = ?",
+      [req.params.signupId]
+    );
+    res.json({ message: "Signup cancelled" });
+  } catch (err) { console.error(err); res.status(500).json({ message: "Server error" }); }
+});
+
+// Update signup status and handle credits
+app.put("/api/signups/:signupId/status", async (req, res) => {
+  const { status } = req.body;
+  try {
+    const [signups] = await db.query(
+      `SELECT sg.*, st.credit_value 
+       FROM signups sg 
+       JOIN studies st ON st.study_id = sg.study_id 
+       WHERE sg.signup_id = ?`,
+      [req.params.signupId]
+    );
+
+    if (!signups.length) return res.status(404).json({ message: "Signup not found" });
+
+    const signup = signups[0];
+    const previousStatus = signup.status;
+
+    await db.query(
+      "UPDATE signups SET status = ? WHERE signup_id = ?",
+      [status, req.params.signupId]
+    );
+
+    // Add credits when marked as attended
+    if (status === "attended" && previousStatus !== "attended" && signup.credit_value) {
+      await db.query(
+        "UPDATE students SET total_credits = total_credits + ? WHERE student_id = ?",
+        [signup.credit_value, signup.student_id]
+      );
+    }
+
+    // Remove credits if changed away from attended
+    if (previousStatus === "attended" && status !== "attended" && signup.credit_value) {
+      await db.query(
+        "UPDATE students SET total_credits = GREATEST(total_credits - ?, 0) WHERE student_id = ?",
+        [signup.credit_value, signup.student_id]
+      );
+    }
+
+    res.json({ message: "Status updated" });
+  } catch (err) { console.error(err); res.status(500).json({ message: "Server error" }); }
+});
+
+// Get student credits
+app.get("/api/students/:studentId/credits", async (req, res) => {
+  try {
+    const [rows] = await db.query(
+      "SELECT total_credits FROM students WHERE student_id = ?",
+      [req.params.studentId]
+    );
+    if (!rows.length) return res.status(404).json({ message: "Student not found" });
+    res.json({ total_credits: rows[0].total_credits });
+  } catch (err) { console.error(err); res.status(500).json({ message: "Server error" }); }
+});
+
+// ===============================
 // TRAINING
 // ===============================
 
@@ -355,23 +513,6 @@ app.post("/api/training/seed", async (req, res) => {
     );
 
     res.json({ message: "Seeded successfully" });
-  } catch (err) { console.error(err); res.status(500).json({ message: "Server error" }); }
-});
-
-// GET student signups
-app.get("/api/student/:studentId/signups", async (req, res) => {
-  try {
-    const [rows] = await db.query(
-      `SELECT sg.*, se.session_date, se.start_time, se.end_time, se.location,
-              st.title AS study_title, st.credit_value
-       FROM signups sg
-       JOIN sessions se ON se.session_id = sg.session_id
-       JOIN studies st ON st.study_id = se.study_id
-       WHERE sg.student_id = ?
-       ORDER BY se.session_date, se.start_time`,
-      [req.params.studentId]
-    );
-    res.json(rows);
   } catch (err) { console.error(err); res.status(500).json({ message: "Server error" }); }
 });
 
