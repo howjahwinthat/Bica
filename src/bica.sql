@@ -145,7 +145,8 @@ CREATE TABLE `studies` (
   `requires_prescreen` tinyint(1) DEFAULT 0,
   `is_open` tinyint(1) DEFAULT 0,
   `building` varchar(100) DEFAULT NULL,
-  `room_number` varchar(20) DEFAULT NULL
+  `room_number` varchar(20) DEFAULT NULL,
+  `study_date` datetime DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
