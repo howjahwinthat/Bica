@@ -65,6 +65,18 @@ CREATE TABLE `researchers` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `rooms`
+--
+
+CREATE TABLE `rooms` (
+  `room_id` int(11) NOT NULL,
+  `building` varchar(100) DEFAULT NULL,
+  `room_number` varchar(20) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `sessions`
 --
 
@@ -83,33 +95,17 @@ CREATE TABLE `sessions` (
 --
 -- Table structure for table `signups`
 --
-CREATE TABLE signups (
-  signup_id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-  session_id INT NOT NULL,
-  student_id INT NOT NULL,
-  signup_status ENUM('signed_up','completed','no_show','cancelled') 
-      DEFAULT 'signed_up',
-  signed_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
-  PRIMARY KEY (signup_id),
-
-  -- Prevent duplicate signups
-  UNIQUE KEY uq_session_student (session_id, student_id),
-
-  -- Foreign keys
-  CONSTRAINT fk_signup_session
-    FOREIGN KEY (session_id)
-    REFERENCES sessions(session_id)
-    ON DELETE CASCADE,
-
-  CONSTRAINT fk_signup_student
-    FOREIGN KEY (student_id)
-    REFERENCES students(student_id)
-    ON DELETE CASCADE
-) ENGINE=InnoDB
-  DEFAULT CHARSET=utf8mb4
-  COLLATE=utf8mb4_general_ci;
-
+CREATE TABLE `signups` (
+  `signup_id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+  `student_id` bigint(20) UNSIGNED NOT NULL,
+  `study_id` bigint(20) UNSIGNED NOT NULL,
+  `signed_up_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `status` enum('registered','attended','no_show','cancelled') DEFAULT 'registered',
+  PRIMARY KEY (`signup_id`),
+  FOREIGN KEY (`student_id`) REFERENCES `users`(`user_id`) ON DELETE CASCADE,
+  FOREIGN KEY (`study_id`) REFERENCES `studies`(`study_id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -139,7 +135,17 @@ CREATE TABLE `studies` (
   `credit_value` decimal(4,2) DEFAULT NULL,
   `max_participants` int(11) DEFAULT NULL,
   `status` varchar(20) DEFAULT NULL CHECK (`status` in ('draft','active','closed')),
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `proctor` varchar(255) DEFAULT NULL,
+  `department` varchar(255) DEFAULT NULL,
+  `study_type` varchar(50) DEFAULT NULL,
+  `duration` int(11) DEFAULT NULL,
+  `eligibility_criteria` text DEFAULT NULL,
+  `is_active` tinyint(1) DEFAULT 1,
+  `requires_prescreen` tinyint(1) DEFAULT 0,
+  `is_open` tinyint(1) DEFAULT 0,
+  `building` varchar(100) DEFAULT NULL,
+  `room_number` varchar(20) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -153,6 +159,73 @@ CREATE TABLE `study_eligibility` (
   `study_id` int(11) DEFAULT NULL,
   `rule_type` varchar(50) DEFAULT NULL,
   `rule_value` varchar(100) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `training_workflows`
+--
+
+CREATE TABLE `training_workflows` (
+  `workflow_id` int(11) NOT NULL AUTO_INCREMENT,
+  `title` varchar(255) NOT NULL,
+  `description` text DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`workflow_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `training_modules`
+--
+
+CREATE TABLE `training_modules` (
+  `module_id` int(11) NOT NULL AUTO_INCREMENT,
+  `workflow_id` int(11) NOT NULL,
+  `title` varchar(255) NOT NULL,
+  `description` text DEFAULT NULL,
+  `type` enum('guide','quiz') NOT NULL,
+  `content` text DEFAULT NULL,
+  `order_index` int(11) NOT NULL DEFAULT 0,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`module_id`),
+  FOREIGN KEY (`workflow_id`) REFERENCES `training_workflows`(`workflow_id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `training_quiz_questions`
+--
+
+CREATE TABLE `training_quiz_questions` (
+  `question_id` int(11) NOT NULL AUTO_INCREMENT,
+  `module_id` int(11) NOT NULL,
+  `question` text NOT NULL,
+  `type` enum('multiple_choice','true_false') NOT NULL,
+  `options` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`options`)),
+  `correct_answer` varchar(255) NOT NULL,
+  PRIMARY KEY (`question_id`),
+  FOREIGN KEY (`module_id`) REFERENCES `training_modules`(`module_id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `training_progress`
+--
+
+CREATE TABLE `training_progress` (
+  `progress_id` int(11) NOT NULL AUTO_INCREMENT,
+  `user_id` int(11) NOT NULL,
+  `module_id` int(11) NOT NULL,
+  `completed` tinyint(1) DEFAULT 0,
+  `score` int(11) DEFAULT NULL,
+  `completed_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`progress_id`),
+  FOREIGN KEY (`module_id`) REFERENCES `training_modules`(`module_id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -176,59 +249,28 @@ CREATE TABLE `users` (
 -- Indexes for dumped tables
 --
 
---
--- Indexes for table `credits`
---
 ALTER TABLE `credits`
   ADD PRIMARY KEY (`credit_id`);
 
---
--- Indexes for table `penalties`
---
 ALTER TABLE `penalties`
   ADD PRIMARY KEY (`penalty_id`);
 
---
--- Indexes for table `researchers`
---
 ALTER TABLE `researchers`
   ADD PRIMARY KEY (`researcher_id`);
 
---
--- Indexes for table `sessions`
---
 ALTER TABLE `sessions`
   ADD PRIMARY KEY (`session_id`);
 
---
--- Indexes for table `signups`
---
-ALTER TABLE `signups`
-  ADD PRIMARY KEY (`signup_id`),
-  ADD UNIQUE KEY `session_id` (`session_id`,`student_id`);
-
---
--- Indexes for table `students`
---
 ALTER TABLE `students`
   ADD PRIMARY KEY (`student_id`),
   ADD UNIQUE KEY `student_number` (`student_number`);
 
---
--- Indexes for table `studies`
---
 ALTER TABLE `studies`
   ADD PRIMARY KEY (`study_id`);
 
---
--- Indexes for table `study_eligibility`
---
 ALTER TABLE `study_eligibility`
   ADD PRIMARY KEY (`eligibility_id`);
 
---
--- Indexes for table `users`
---
 ALTER TABLE `users`
   ADD PRIMARY KEY (`user_id`),
   ADD UNIQUE KEY `email` (`email`);
@@ -237,49 +279,25 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for dumped tables
 --
 
---
--- AUTO_INCREMENT for table `credits`
---
 ALTER TABLE `credits`
   MODIFY `credit_id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
 
---
--- AUTO_INCREMENT for table `penalties`
---
 ALTER TABLE `penalties`
   MODIFY `penalty_id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
 
---
--- AUTO_INCREMENT for table `sessions`
---
 ALTER TABLE `sessions`
   MODIFY `session_id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
 
---
--- AUTO_INCREMENT for table `signups`
---
 ALTER TABLE `signups`
   MODIFY `signup_id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
 
---
--- AUTO_INCREMENT for table `studies`
---
 ALTER TABLE `studies`
   MODIFY `study_id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
 
---
--- AUTO_INCREMENT for table `study_eligibility`
---
 ALTER TABLE `study_eligibility`
   MODIFY `eligibility_id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
 
---
--- AUTO_INCREMENT for table `users`
---
 ALTER TABLE `users`
   MODIFY `user_id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
-COMMIT;
 
-/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
-/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
-/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
+COMMIT;
