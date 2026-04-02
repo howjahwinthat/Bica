@@ -65,18 +65,6 @@ CREATE TABLE `researchers` (
 -- --------------------------------------------------------
 
 --
--- Table structure for table `rooms`
---
-
-CREATE TABLE `rooms` (
-  `room_id` int(11) NOT NULL,
-  `building` varchar(100) DEFAULT NULL,
-  `room_number` varchar(20) DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- --------------------------------------------------------
-
---
 -- Table structure for table `sessions`
 --
 
@@ -249,28 +237,59 @@ CREATE TABLE `users` (
 -- Indexes for dumped tables
 --
 
+--
+-- Indexes for table `credits`
+--
 ALTER TABLE `credits`
   ADD PRIMARY KEY (`credit_id`);
 
+--
+-- Indexes for table `penalties`
+--
 ALTER TABLE `penalties`
   ADD PRIMARY KEY (`penalty_id`);
 
+--
+-- Indexes for table `researchers`
+--
 ALTER TABLE `researchers`
   ADD PRIMARY KEY (`researcher_id`);
 
+--
+-- Indexes for table `sessions`
+--
 ALTER TABLE `sessions`
   ADD PRIMARY KEY (`session_id`);
 
+--
+-- Indexes for table `signups`
+--
+ALTER TABLE `signups`
+  ADD PRIMARY KEY (`signup_id`),
+  ADD UNIQUE KEY `session_id` (`session_id`,`student_id`);
+
+--
+-- Indexes for table `students`
+--
 ALTER TABLE `students`
   ADD PRIMARY KEY (`student_id`),
   ADD UNIQUE KEY `student_number` (`student_number`);
 
+--
+-- Indexes for table `studies`
+--
 ALTER TABLE `studies`
   ADD PRIMARY KEY (`study_id`);
 
+--
+-- Indexes for table `study_eligibility`
+--
 ALTER TABLE `study_eligibility`
   ADD PRIMARY KEY (`eligibility_id`);
 
+--
+-- Indexes for table `users`
+--
 ALTER TABLE `users`
   ADD PRIMARY KEY (`user_id`),
   ADD UNIQUE KEY `email` (`email`);
@@ -279,23 +298,73 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for dumped tables
 --
 
+--
+-- AUTO_INCREMENT for table `credits`
+--
 ALTER TABLE `credits`
   MODIFY `credit_id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
 
+--
+-- AUTO_INCREMENT for table `penalties`
+--
 ALTER TABLE `penalties`
   MODIFY `penalty_id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
 
+--
+-- AUTO_INCREMENT for table `sessions`
+--
 ALTER TABLE `sessions`
   MODIFY `session_id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
 
+--
+-- AUTO_INCREMENT for table `signups`
+--
 ALTER TABLE `signups`
   MODIFY `signup_id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
 
+--
+-- AUTO_INCREMENT for table `studies`
+--
 ALTER TABLE `studies`
   MODIFY `study_id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
 
+--
+-- AUTO_INCREMENT for table `study_eligibility`
+--
 ALTER TABLE `study_eligibility`
   MODIFY `eligibility_id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `users`
+--
+ALTER TABLE `users`
+  MODIFY `user_id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `training_workflows`
+--
+ALTER TABLE `training_workflows`
+  MODIFY `workflow_id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `training_modules`
+--
+ALTER TABLE `training_modules`
+  MODIFY `module_id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `training_quiz_questions`
+--
+ALTER TABLE `training_quiz_questions`
+  MODIFY `question_id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `training_progress`
+--
+ALTER TABLE `training_progress`
+  MODIFY `progress_id` int(11) NOT NULL AUTO_INCREMENT;
+
+COMMIT;
 
 ALTER TABLE `users`
   MODIFY `user_id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
