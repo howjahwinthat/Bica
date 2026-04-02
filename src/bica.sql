@@ -65,6 +65,18 @@ CREATE TABLE `researchers` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `rooms`
+--
+
+CREATE TABLE `rooms` (
+  `room_id` int(11) NOT NULL,
+  `building` varchar(100) DEFAULT NULL,
+  `room_number` varchar(20) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `sessions`
 --
 
@@ -256,6 +268,12 @@ ALTER TABLE `researchers`
   ADD PRIMARY KEY (`researcher_id`);
 
 --
+-- Indexes for table `rooms`
+--
+ALTER TABLE `rooms`
+  ADD PRIMARY KEY (`room_id`);
+
+--
 -- Indexes for table `sessions`
 --
 ALTER TABLE `sessions`
@@ -363,10 +381,5 @@ ALTER TABLE `training_quiz_questions`
 --
 ALTER TABLE `training_progress`
   MODIFY `progress_id` int(11) NOT NULL AUTO_INCREMENT;
-
-COMMIT;
-
-ALTER TABLE `users`
-  MODIFY `user_id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
 
 COMMIT;
