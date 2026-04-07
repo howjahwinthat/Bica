@@ -65,11 +65,11 @@ export default function StudentCalendar() {
 
   const getSignupsForDay = (day: number) => {
     const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-    return signups.filter(s => s.session_date.split('T')[0] === dateStr);
+    return signups.filter(s => s.session_date && s.session_date.split('T')[0] === dateStr);
   };
 
   const selectedDaySignups = selectedDay
-    ? signups.filter(s => s.session_date.split('T')[0] === selectedDay)
+    ? signups.filter(s => s.session_date && s.session_date.split('T')[0] === selectedDay)
     : [];
 
   const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
