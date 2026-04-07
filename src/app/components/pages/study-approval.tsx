@@ -1,11 +1,9 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router";
 import { Card } from "../ui/card";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
 import { Textarea } from "../ui/textarea";
-import { Label } from "../ui/label";
-import { ArrowLeft } from "lucide-react";
+import { CheckCircle, XCircle, Clock, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 type Study = {
@@ -22,7 +20,6 @@ type Study = {
 };
 
 export function StudyApproval() {
-  const navigate = useNavigate();
   const [studies, setStudies] = useState<Study[]>([]);
   const [loading, setLoading] = useState(true);
   const [reviewNotes, setReviewNotes] = useState<Record<number, string>>({});
@@ -61,24 +58,15 @@ export function StudyApproval() {
           study_type: study.study_type,
           duration: study.duration,
           credit_value: study.credit_value,
-          eligibility_criteria: null,
           status: newStatus,
           is_active: true,
           requires_prescreen: false,
-          is_open: false,
+          is_open: newStatus === "active",
         }),
       });
       if (!res.ok) throw new Error("Failed to update status");
-      setStudies((prev) =>
-        prev.map((s) =>
-          s.study_id === study.study_id ? { ...s, status: newStatus } : s
-        )
-      );
-      toast.success(
-        newStatus === "active"
-          ? `"${study.title}" has been approved!`
-          : `"${study.title}" has been closed`
-      );
+      setStudies(prev => prev.map(s => s.study_id === study.study_id ? { ...s, status: newStatus } : s));
+      toast.success(newStatus === "active" ? `"${study.title}" approved!` : `"${study.title}" rejected`);
     } catch (err: any) {
       toast.error(err.message || "Something went wrong");
     } finally {
@@ -86,124 +74,145 @@ export function StudyApproval() {
     }
   };
 
-  const pendingStudies = studies.filter((s) => s.status === "draft" || !s.status);
-  const reviewedStudies = studies.filter((s) => s.status === "active" || s.status === "closed");
+  const pendingStudies = studies.filter(s => s.status === "draft" || !s.status);
+  const reviewedStudies = studies.filter(s => s.status === "active" || s.status === "closed");
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50 p-6">
-      <div className="max-w-4xl mx-auto">
-        <div className="mb-6">
-          <Button variant="link" onClick={() => navigate("/dashboard")}>
-            <ArrowLeft className="w-4 h-4 mr-2 inline-block" /> Back to Dashboard
-          </Button>
-        </div>
-
-        <Card className="p-8">
-          <h1 className="text-2xl font-semibold mb-2">Study Approval Requests</h1>
-          <p className="text-sm text-gray-500 mb-6">
-            {pendingStudies.length} pending • {reviewedStudies.length} reviewed
-          </p>
-
-          {loading ? (
-            <p className="text-gray-500 text-center py-12">Loading studies...</p>
-          ) : (
-            <div className="space-y-6">
-              {pendingStudies.length === 0 && (
-                <p className="text-gray-600 text-center py-8">No pending approval requests</p>
-              )}
-
-              {pendingStudies.map((study) => (
-                <div key={study.study_id} className="border p-4 rounded bg-white">
-                  <div className="flex items-start justify-between mb-3">
-                    <div>
-                      <h3 className="text-lg font-semibold">{study.title}</h3>
-                      <p className="text-sm text-gray-600">
-                        {study.proctor && <span>{study.proctor}</span>}
-                        {study.proctor && study.department && <span> • </span>}
-                        {study.department && <span>{study.department}</span>}
-                      </p>
-                    </div>
-                    <Badge variant="secondary">Draft</Badge>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-2 text-sm text-gray-600 mb-3">
-                    {study.study_type && (
-                      <div><span className="font-medium">Type:</span> {study.study_type}</div>
-                    )}
-                    {study.duration && (
-                      <div><span className="font-medium">Duration:</span> {study.duration} min</div>
-                    )}
-                    {study.credit_value && (
-                      <div><span className="font-medium">Credits:</span> {study.credit_value}</div>
-                    )}
-                    <div>
-                      <span className="font-medium">Submitted:</span>{" "}
-                      {new Date(study.created_at).toLocaleDateString()}
-                    </div>
-                  </div>
-
-                  {study.description && (
-                    <p className="text-gray-700 mb-3 text-sm">{study.description}</p>
-                  )}
-
-                  <div className="mb-3">
-                    <Label htmlFor={`notes-${study.study_id}`}>Review Notes</Label>
-                    <Textarea
-                      id={`notes-${study.study_id}`}
-                      value={reviewNotes[study.study_id] || ""}
-                      onChange={(e) =>
-                        setReviewNotes({ ...reviewNotes, [study.study_id]: e.target.value })
-                      }
-                      placeholder="Add notes or feedback..."
-                      rows={2}
-                    />
-                  </div>
-
-                  <div className="flex gap-3">
-                    <Button
-                      onClick={() => handleUpdateStatus(study, "active")}
-                      disabled={processingId === study.study_id}
-                      className="flex-1 bg-green-600 hover:bg-green-700"
-                    >
-                      {processingId === study.study_id ? "Processing..." : "Approve"}
-                    </Button>
-                    <Button
-                      variant="destructive"
-                      onClick={() => handleUpdateStatus(study, "closed")}
-                      disabled={processingId === study.study_id}
-                      className="flex-1"
-                    >
-                      {processingId === study.study_id ? "Processing..." : "Reject"}
-                    </Button>
-                  </div>
-                </div>
-              ))}
-
-              {reviewedStudies.length > 0 && (
-                <>
-                  <h2 className="text-lg font-semibold text-gray-700 mt-8 mb-2">Previously Reviewed</h2>
-                  {reviewedStudies.map((study) => (
-                    <div key={study.study_id} className="border p-4 rounded bg-gray-50">
-                      <div className="flex items-start justify-between">
-                        <div>
-                          <h3 className="font-semibold">{study.title}</h3>
-                          <p className="text-sm text-gray-600">
-                            {study.proctor && <span>{study.proctor}</span>}
-                            {study.proctor && study.department && <span> • </span>}
-                            {study.department && <span>{study.department}</span>}
-                          </p>
-                        </div>
-                        <Badge variant={study.status === "active" ? "default" : "destructive"}>
-                          {study.status === "active" ? "Approved" : "Rejected"}
-                        </Badge>
-                      </div>
-                    </div>
-                  ))}
-                </>
-              )}
+    <div className="min-h-screen" style={{ backgroundColor: '#F4F6F9' }}>
+      {/* Page Header */}
+      <div style={{ background: 'linear-gradient(135deg, #003580 0%, #0047AB 100%)' }} className="px-8 py-8">
+        <div className="max-w-4xl mx-auto">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: 'rgba(255,255,255,0.15)' }}>
+              <CheckCircle className="w-5 h-5 text-white" />
             </div>
-          )}
-        </Card>
+            <div>
+              <h1 className="text-2xl font-bold text-white">Study Approval</h1>
+              <p className="text-blue-200 text-sm">{pendingStudies.length} pending · {reviewedStudies.length} reviewed</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="max-w-4xl mx-auto px-8 py-8">
+        {loading ? (
+          <div className="flex items-center justify-center py-20">
+            <Loader2 className="w-8 h-8 animate-spin" style={{ color: '#003580' }} />
+          </div>
+        ) : (
+          <div className="space-y-6">
+            {/* Pending */}
+            {pendingStudies.length === 0 ? (
+              <Card className="p-12 text-center border-0 shadow-sm">
+                <CheckCircle className="w-12 h-12 mx-auto mb-3" style={{ color: '#C0C0C0' }} />
+                <p className="font-semibold text-gray-500">No pending approvals</p>
+                <p className="text-sm text-gray-400 mt-1">All studies have been reviewed.</p>
+              </Card>
+            ) : (
+              pendingStudies.map(study => (
+                <Card key={study.study_id} className="border-0 shadow-sm overflow-hidden">
+                  <div className="p-1" style={{ background: 'linear-gradient(90deg, #F59E0B, #FBBF24)' }} />
+                  <div className="p-6">
+                    <div className="flex items-start justify-between mb-4">
+                      <div>
+                        <h3 className="text-lg font-bold text-gray-800">{study.title}</h3>
+                        <p className="text-sm text-gray-500 mt-0.5">
+                          {[study.proctor, study.department].filter(Boolean).join(' · ')}
+                        </p>
+                      </div>
+                      <span className="px-3 py-1 rounded-full text-xs font-semibold" style={{ backgroundColor: '#FEF3C7', color: '#92400E' }}>
+                        <Clock className="w-3 h-3 inline mr-1" />Pending
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-3 mb-4">
+                      {study.study_type && (
+                        <div className="rounded-lg p-3 text-center" style={{ backgroundColor: '#EBF0FA' }}>
+                          <p className="text-xs text-gray-400 uppercase tracking-wide">Type</p>
+                          <p className="font-semibold text-sm mt-0.5" style={{ color: '#003580' }}>{study.study_type}</p>
+                        </div>
+                      )}
+                      {study.duration && (
+                        <div className="rounded-lg p-3 text-center" style={{ backgroundColor: '#EBF0FA' }}>
+                          <p className="text-xs text-gray-400 uppercase tracking-wide">Duration</p>
+                          <p className="font-semibold text-sm mt-0.5" style={{ color: '#003580' }}>{study.duration} min</p>
+                        </div>
+                      )}
+                      {study.credit_value && (
+                        <div className="rounded-lg p-3 text-center" style={{ backgroundColor: '#EBF0FA' }}>
+                          <p className="text-xs text-gray-400 uppercase tracking-wide">Credits</p>
+                          <p className="font-semibold text-sm mt-0.5" style={{ color: '#003580' }}>{study.credit_value}</p>
+                        </div>
+                      )}
+                    </div>
+
+                    {study.description && (
+                      <p className="text-gray-600 text-sm mb-4 leading-relaxed">{study.description}</p>
+                    )}
+
+                    <div className="mb-4">
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">Review Notes</label>
+                      <Textarea
+                        value={reviewNotes[study.study_id] || ""}
+                        onChange={e => setReviewNotes({ ...reviewNotes, [study.study_id]: e.target.value })}
+                        placeholder="Add feedback or notes for the researcher..."
+                        rows={2}
+                        className="border-gray-200 rounded-xl"
+                      />
+                    </div>
+
+                    <div className="flex gap-3">
+                      <button
+                        onClick={() => handleUpdateStatus(study, "active")}
+                        disabled={processingId === study.study_id}
+                        className="flex-1 py-2.5 rounded-xl text-white font-semibold text-sm flex items-center justify-center gap-2 transition-all hover:opacity-90"
+                        style={{ backgroundColor: '#16A34A' }}
+                      >
+                        {processingId === study.study_id ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4" />}
+                        Approve
+                      </button>
+                      <button
+                        onClick={() => handleUpdateStatus(study, "closed")}
+                        disabled={processingId === study.study_id}
+                        className="flex-1 py-2.5 rounded-xl text-white font-semibold text-sm flex items-center justify-center gap-2 transition-all hover:opacity-90"
+                        style={{ backgroundColor: '#DC2626' }}
+                      >
+                        {processingId === study.study_id ? <Loader2 className="w-4 h-4 animate-spin" /> : <XCircle className="w-4 h-4" />}
+                        Reject
+                      </button>
+                    </div>
+                  </div>
+                </Card>
+              ))
+            )}
+
+            {/* Reviewed */}
+            {reviewedStudies.length > 0 && (
+              <div>
+                <h2 className="text-lg font-bold mb-4 mt-8" style={{ color: '#003580' }}>Previously Reviewed</h2>
+                <div className="space-y-3">
+                  {reviewedStudies.map(study => (
+                    <Card key={study.study_id} className="p-4 border-0 shadow-sm">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="font-semibold text-gray-800">{study.title}</p>
+                          <p className="text-sm text-gray-400">{[study.proctor, study.department].filter(Boolean).join(' · ')}</p>
+                        </div>
+                        <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                          study.status === 'active'
+                            ? 'bg-green-100 text-green-700'
+                            : 'bg-red-100 text-red-700'
+                        }`}>
+                          {study.status === 'active' ? '✓ Approved' : '✗ Rejected'}
+                        </span>
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
