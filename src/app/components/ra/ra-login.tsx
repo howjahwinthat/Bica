@@ -6,6 +6,7 @@ import { Label } from "../ui/label";
 import { Button } from "../ui/button";
 import { toast } from "sonner";
 import { useAuth } from "@/app/context/AuthContext";
+import { Clock } from "lucide-react";
 
 type LoginForm = {
   email: string;
@@ -28,11 +29,13 @@ export function RALogin() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.message);
-      }
+
       const result = await res.json();
+
+      if (!res.ok) {
+        throw new Error(result.message);
+      }
+
       login(result.user, result.token);
       toast.success("Welcome back!");
       navigate("/ra/dashboard");
@@ -53,15 +56,25 @@ export function RALogin() {
             <Input type="email" {...register("email", { required: "Email is required" })} />
             {errors.email && <p className="text-red-600 text-sm mt-1">{errors.email.message}</p>}
           </div>
-
           <div>
             <Label>Password *</Label>
             <Input type="password" {...register("password", { required: "Password is required" })} />
             {errors.password && <p className="text-red-600 text-sm mt-1">{errors.password.message}</p>}
           </div>
-
           <Button type="submit" className="w-full">Log In</Button>
         </form>
+
+        {/* Pending approval info box — always visible so RAs know what to expect */}
+        <div className="mt-6 rounded-lg border border-yellow-200 bg-yellow-50 p-4 flex gap-3">
+          <Clock className="w-5 h-5 text-yellow-500 shrink-0 mt-0.5" />
+          <div>
+            <p className="text-sm font-semibold text-yellow-800">Account pending approval?</p>
+            <p className="text-sm text-yellow-700 mt-0.5">
+              New RA accounts require admin approval before you can log in. If you have been waiting,
+              please contact your administrator to get your account activated.
+            </p>
+          </div>
+        </div>
 
         <p className="text-center text-sm text-gray-500 mt-4">
           Don't have an account?{" "}

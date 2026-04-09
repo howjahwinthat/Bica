@@ -17,7 +17,9 @@ app.use(express.json());
 
 app.get("/", (req, res) => res.send("Backend is running"));
 
+// ===============================
 // STUDENT AUTH
+// ===============================
 app.post("/api/student/signup", async (req, res) => {
   const { first_name, last_name, email, password, studentId, course } = req.body;
   if (!first_name || !last_name || !email || !password || !studentId || !course)
@@ -27,7 +29,8 @@ app.post("/api/student/signup", async (req, res) => {
     if (existing.length) return res.status(409).json({ message: "Email already registered" });
     const hashed = await bcrypt.hash(password, 10);
     const [result] = await db.query(
-      "INSERT INTO users (role, first_name, last_name, email, password_hash) VALUES ('student', ?, ?, ?, ?)",
+      // Students are auto-approved — no admin approval needed
+      "INSERT INTO users (role, first_name, last_name, email, password_hash, is_approved) VALUES ('student', ?, ?, ?, ?, 1)",
       [first_name, last_name, email, hashed]
     );
     await db.query("INSERT INTO students (student_id, student_number, major) VALUES (?, ?, ?)",
@@ -45,15 +48,18 @@ app.post("/api/student/login", async (req, res) => {
     const user = rows[0];
     if (!await bcrypt.compare(password, user.password_hash))
       return res.status(401).json({ message: "Invalid credentials" });
+    if (!user.is_active) return res.status(403).json({ message: "Your account has been disabled." });
     const token = jwt.sign(
       { id: user.user_id, email: user.email, role: "student", name: `${user.first_name} ${user.last_name}` },
       process.env.JWT_SECRET || "secret", { expiresIn: "7d" }
     );
-    res.json({ user: { id: user.user_id, name: `${user.first_name} ${user.last_name}`, email: user.email, role: "student" }, token });
+    res.json({ user: { id: String(user.user_id), name: `${user.first_name} ${user.last_name}`, email: user.email, role: "student" }, token });
   } catch (err) { console.error(err); res.status(500).json({ message: "Server error" }); }
 });
 
+// ===============================
 // ADMIN AUTH
+// ===============================
 app.post("/api/auth/login", async (req, res) => {
   const { email, password } = req.body;
   if (!email || !password) return res.status(400).json({ message: "Email and password are required" });
@@ -61,21 +67,20 @@ app.post("/api/auth/login", async (req, res) => {
     const [rows] = await db.query("SELECT * FROM users WHERE email = ? AND role = 'admin'", [email]);
     if (!rows.length) return res.status(401).json({ message: "Invalid credentials" });
     const user = rows[0];
-    if (user.is_active === 0) return res.status(403).json({ message: "Account is disabled" });
+    if (!user.is_active) return res.status(403).json({ message: "Account is disabled" });
     if (!await bcrypt.compare(password, user.password_hash))
       return res.status(401).json({ message: "Invalid credentials" });
     const token = jwt.sign(
       { id: user.user_id, email: user.email, role: "admin", name: `${user.first_name} ${user.last_name}` },
       process.env.JWT_SECRET || "secret", { expiresIn: "8h" }
     );
-    res.json({ user: { id: user.user_id, name: `${user.first_name} ${user.last_name}`, email: user.email, role: "admin" }, token });
+    res.json({ user: { id: String(user.user_id), name: `${user.first_name} ${user.last_name}`, email: user.email, role: "admin" }, token });
   } catch (err) { console.error(err); res.status(500).json({ message: "Server error" }); }
 });
 
 // ===============================
 // RA AUTH
 // ===============================
-
 app.post("/api/ra/signup", async (req, res) => {
   const { first_name, last_name, email, password, department } = req.body;
   if (!first_name || !last_name || !email || !password)
@@ -85,14 +90,13 @@ app.post("/api/ra/signup", async (req, res) => {
     if (existing.length) return res.status(409).json({ message: "Email already registered" });
     const hashed = await bcrypt.hash(password, 10);
     const [result] = await db.query(
-      "INSERT INTO users (role, first_name, last_name, email, password_hash) VALUES ('researcher', ?, ?, ?, ?)",
+      // RAs start as is_approved = 0 — admin must approve before they can log in
+      "INSERT INTO users (role, first_name, last_name, email, password_hash, is_approved) VALUES ('researcher', ?, ?, ?, ?, 0)",
       [first_name, last_name, email, hashed]
     );
-    await db.query(
-      "INSERT INTO researchers (researcher_id, department) VALUES (?, ?)",
-      [result.insertId, department || null]
-    );
-    res.status(201).json({ message: "RA account created successfully" });
+    await db.query("INSERT INTO researchers (researcher_id, department) VALUES (?, ?)",
+      [result.insertId, department || null]);
+    res.status(201).json({ message: "Account created. Please wait for admin approval before logging in." });
   } catch (err) { console.error(err); res.status(500).json({ message: "Server error" }); }
 });
 
@@ -105,15 +109,22 @@ app.post("/api/ra/login", async (req, res) => {
     const user = rows[0];
     if (!await bcrypt.compare(password, user.password_hash))
       return res.status(401).json({ message: "Invalid credentials" });
+    // Block login until admin approves the account
+    if (!user.is_approved)
+      return res.status(403).json({ message: "Your account is pending admin approval." });
+    if (!user.is_active)
+      return res.status(403).json({ message: "Your account has been disabled." });
     const token = jwt.sign(
       { id: user.user_id, email: user.email, role: "researcher", name: `${user.first_name} ${user.last_name}` },
       process.env.JWT_SECRET || "secret", { expiresIn: "8h" }
     );
-    res.json({ user: { id: user.user_id, name: `${user.first_name} ${user.last_name}`, email: user.email, role: "researcher" }, token });
+    res.json({ user: { id: String(user.user_id), name: `${user.first_name} ${user.last_name}`, email: user.email, role: "researcher" }, token });
   } catch (err) { console.error(err); res.status(500).json({ message: "Server error" }); }
 });
 
+// ===============================
 // STUDIES
+// ===============================
 app.get("/api/studies", async (req, res) => {
   try {
     const [rows] = await db.query("SELECT * FROM studies ORDER BY created_at DESC");
@@ -125,7 +136,15 @@ app.get("/api/studies/:id", async (req, res) => {
   try {
     const [rows] = await db.query("SELECT * FROM studies WHERE study_id = ?", [req.params.id]);
     if (!rows.length) return res.status(404).json({ message: "Study not found" });
-    res.json(rows[0]);
+    const study = rows[0];
+    const [sessions] = await db.query(
+      `SELECT s.*, (s.capacity - IFNULL(COUNT(sg.signup_id),0)) AS available_spots
+       FROM sessions s
+       LEFT JOIN signups sg ON sg.study_id = s.study_id
+       WHERE s.study_id = ? GROUP BY s.session_id ORDER BY s.session_date, s.start_time`,
+      [req.params.id]
+    );
+    res.json({ ...study, sessions });
   } catch (err) { console.error(err); res.status(500).json({ message: "Server error" }); }
 });
 
@@ -149,7 +168,6 @@ app.put("/api/studies/:id", async (req, res) => {
     const [current] = await db.query("SELECT * FROM studies WHERE study_id = ?", [req.params.id]);
     if (!current.length) return res.status(404).json({ message: "Study not found" });
     const existing = current[0];
-    const finalStatus = status !== undefined ? status : existing.status;
     await db.query(
       `UPDATE studies SET title=?, description=?, proctor=?, department=?, study_type=?, duration=?, credit_value=?, eligibility_criteria=?, is_active=?, requires_prescreen=?, is_open=?, building=?, room_number=?, status=? WHERE study_id=?`,
       [
@@ -166,7 +184,7 @@ app.put("/api/studies/:id", async (req, res) => {
         is_open !== undefined ? (is_open ? 1 : 0) : existing.is_open,
         building !== undefined ? building : existing.building,
         roomNumber || room_number || existing.room_number,
-        finalStatus,
+        status !== undefined ? status : existing.status,
         req.params.id,
       ]
     );
@@ -184,54 +202,47 @@ app.delete("/api/studies/:id", async (req, res) => {
 });
 
 // ===============================
-// STATS
+// SESSIONS
 // ===============================
-
-app.get("/api/stats", async (req, res) => {
-  try {
-    const [[{ totalStudies }]] = await db.query("SELECT COUNT(*) as totalStudies FROM studies");
-    const [[{ pendingApprovals }]] = await db.query("SELECT COUNT(*) as pendingApprovals FROM studies WHERE status = 'draft'");
-    const [[{ totalStudents }]] = await db.query("SELECT COUNT(*) as totalStudents FROM users WHERE role = 'student'");
-    const [[{ totalRAs }]] = await db.query("SELECT COUNT(*) as totalRAs FROM users WHERE role = 'researcher'");
-    res.json({ totalStudies, pendingApprovals, totalStudents, totalRAs });
-  } catch (err) { console.error(err); res.status(500).json({ message: "Server error" }); }
-});
-
-// ===============================
-// USER MANAGEMENT
-// ===============================
-
-app.get("/api/users", async (req, res) => {
+app.get("/api/studies/:id/sessions", async (req, res) => {
   try {
     const [rows] = await db.query(
-      "SELECT user_id, first_name, last_name, email, role, is_active, created_at FROM users WHERE role IN ('student', 'researcher') ORDER BY created_at DESC"
+      `SELECT s.*, (s.capacity - IFNULL(COUNT(sg.signup_id),0)) AS available_spots
+       FROM sessions s
+       LEFT JOIN signups sg ON sg.study_id = s.study_id
+       WHERE s.study_id = ? GROUP BY s.session_id ORDER BY s.session_date, s.start_time`,
+      [req.params.id]
     );
     res.json(rows);
   } catch (err) { console.error(err); res.status(500).json({ message: "Server error" }); }
 });
 
-app.put("/api/users/:id/toggle", async (req, res) => {
-  const { is_active } = req.body;
+app.post("/api/studies/:id/sessions", async (req, res) => {
+  const { session_date, start_time, end_time, location, capacity } = req.body;
+  if (!session_date || !start_time || !end_time || !capacity)
+    return res.status(400).json({ message: "Date, times, and capacity are required" });
   try {
-    await db.query("UPDATE users SET is_active = ? WHERE user_id = ?", [is_active, req.params.id]);
-    res.json({ message: "User updated" });
+    const [result] = await db.query(
+      "INSERT INTO sessions (study_id, session_date, start_time, end_time, location, capacity) VALUES (?,?,?,?,?,?)",
+      [req.params.id, session_date, start_time, end_time, location||null, capacity]
+    );
+    const [rows] = await db.query("SELECT * FROM sessions WHERE session_id = ?", [result.insertId]);
+    res.status(201).json(rows[0]);
   } catch (err) { console.error(err); res.status(500).json({ message: "Server error" }); }
 });
 
-app.delete("/api/users/:id", async (req, res) => {
+app.delete("/api/sessions/:sessionId", async (req, res) => {
   try {
-    const [result] = await db.query("DELETE FROM users WHERE user_id = ?", [req.params.id]);
-    if (!result.affectedRows) return res.status(404).json({ message: "User not found" });
-    res.json({ message: "User deleted" });
+    await db.query("DELETE FROM sessions WHERE session_id = ?", [req.params.sessionId]);
+    res.json({ message: "Session deleted" });
   } catch (err) { console.error(err); res.status(500).json({ message: "Server error" }); }
 });
 
 // ===============================
 // SIGNUPS
 // ===============================
-
 app.post("/api/signups", async (req, res) => {
-  const { student_id, study_id } = req.body;
+  const { student_id, study_id, session_id } = req.body;
   if (!student_id || !study_id) return res.status(400).json({ message: "Missing required fields" });
   try {
     const [existing] = await db.query(
@@ -277,65 +288,128 @@ app.get("/api/signups/student/:studentId", async (req, res) => {
   } catch (err) { console.error(err); res.status(500).json({ message: "Server error" }); }
 });
 
+app.get("/api/student/:studentId/signups", async (req, res) => {
+  try {
+    const [rows] = await db.query(
+      `SELECT sg.signup_id, sg.status, sg.signed_up_at,
+              st.study_id, st.title AS study_title, st.credit_value,
+              st.building, st.room_number, st.study_type,
+              se.session_id, se.session_date, se.start_time, se.end_time, se.location
+       FROM signups sg
+       JOIN studies st ON st.study_id = sg.study_id
+       LEFT JOIN sessions se ON se.study_id = sg.study_id
+       WHERE sg.student_id = ?
+       ORDER BY se.session_date, se.start_time`,
+      [req.params.studentId]
+    );
+    res.json(rows);
+  } catch (err) { console.error(err); res.status(500).json({ message: "Server error" }); }
+});
+
 app.put("/api/signups/:signupId/cancel", async (req, res) => {
   try {
-    await db.query(
-      "UPDATE signups SET status = 'cancelled' WHERE signup_id = ?",
-      [req.params.signupId]
-    );
+    await db.query("UPDATE signups SET status = 'cancelled' WHERE signup_id = ?", [req.params.signupId]);
     res.json({ message: "Signup cancelled" });
   } catch (err) { console.error(err); res.status(500).json({ message: "Server error" }); }
 });
 
-// Update signup status and handle credits
 app.put("/api/signups/:signupId/status", async (req, res) => {
   const { status } = req.body;
   try {
     const [signups] = await db.query(
-      `SELECT sg.*, st.credit_value 
-       FROM signups sg 
-       JOIN studies st ON st.study_id = sg.study_id 
-       WHERE sg.signup_id = ?`,
+      `SELECT sg.*, st.credit_value FROM signups sg JOIN studies st ON st.study_id = sg.study_id WHERE sg.signup_id = ?`,
       [req.params.signupId]
     );
-
     if (!signups.length) return res.status(404).json({ message: "Signup not found" });
-
     const signup = signups[0];
     const previousStatus = signup.status;
-
-    await db.query(
-      "UPDATE signups SET status = ? WHERE signup_id = ?",
-      [status, req.params.signupId]
-    );
-
-    // Add credits when marked as attended
+    await db.query("UPDATE signups SET status = ? WHERE signup_id = ?", [status, req.params.signupId]);
     if (status === "attended" && previousStatus !== "attended" && signup.credit_value) {
-      await db.query(
-        "UPDATE students SET total_credits = total_credits + ? WHERE student_id = ?",
-        [signup.credit_value, signup.student_id]
-      );
+      await db.query("UPDATE students SET total_credits = total_credits + ? WHERE student_id = ?",
+        [signup.credit_value, signup.student_id]);
     }
-
-    // Remove credits if changed away from attended
     if (previousStatus === "attended" && status !== "attended" && signup.credit_value) {
-      await db.query(
-        "UPDATE students SET total_credits = GREATEST(total_credits - ?, 0) WHERE student_id = ?",
-        [signup.credit_value, signup.student_id]
-      );
+      await db.query("UPDATE students SET total_credits = GREATEST(total_credits - ?, 0) WHERE student_id = ?",
+        [signup.credit_value, signup.student_id]);
     }
-
     res.json({ message: "Status updated" });
   } catch (err) { console.error(err); res.status(500).json({ message: "Server error" }); }
 });
 
-// Get student credits
-app.get("/api/students/:studentId/credits", async (req, res) => {
+// ===============================
+// STATS
+// ===============================
+app.get("/api/stats", async (req, res) => {
+  try {
+    const [[{ totalStudies }]] = await db.query("SELECT COUNT(*) as totalStudies FROM studies");
+    const [[{ pendingApprovals }]] = await db.query("SELECT COUNT(*) as pendingApprovals FROM studies WHERE status = 'draft'");
+    const [[{ totalStudents }]] = await db.query("SELECT COUNT(*) as totalStudents FROM users WHERE role = 'student'");
+    const [[{ totalRAs }]] = await db.query("SELECT COUNT(*) as totalRAs FROM users WHERE role = 'researcher'");
+    const [[{ pendingRAs }]] = await db.query("SELECT COUNT(*) as pendingRAs FROM users WHERE role = 'researcher' AND is_approved = 0");
+    res.json({ totalStudies, pendingApprovals, totalStudents, totalRAs, pendingRAs });
+  } catch (err) { console.error(err); res.status(500).json({ message: "Server error" }); }
+});
+
+// ===============================
+// USER MANAGEMENT
+// ===============================
+
+// Returns all students and researchers, including is_approved for pending tab
+app.get("/api/users", async (req, res) => {
   try {
     const [rows] = await db.query(
-      "SELECT total_credits FROM students WHERE student_id = ?",
-      [req.params.studentId]
+      `SELECT user_id, first_name, last_name, email, role, is_active, is_approved, created_at
+       FROM users WHERE role IN ('student', 'researcher')
+       ORDER BY created_at DESC`
     );
+    res.json(rows);
+  } catch (err) { console.error(err); res.status(500).json({ message: "Server error" }); }
+});
+
+app.put("/api/users/:id/toggle", async (req, res) => {
+  const { is_active } = req.body;
+  try {
+    await db.query("UPDATE users SET is_active = ? WHERE user_id = ?", [is_active, req.params.id]);
+    res.json({ message: "User updated" });
+  } catch (err) { console.error(err); res.status(500).json({ message: "Server error" }); }
+});
+
+// Approve a pending RA
+app.put("/api/users/:id/approve", async (req, res) => {
+  try {
+    await db.query(
+      "UPDATE users SET is_approved = 1, is_active = 1 WHERE user_id = ? AND role = 'researcher'",
+      [req.params.id]
+    );
+    res.json({ message: "User approved" });
+  } catch (err) { console.error(err); res.status(500).json({ message: "Server error" }); }
+});
+
+// Reject a pending RA (removes them entirely)
+app.delete("/api/users/:id/reject", async (req, res) => {
+  try {
+    await db.query(
+      "DELETE FROM users WHERE user_id = ? AND role = 'researcher' AND is_approved = 0",
+      [req.params.id]
+    );
+    res.json({ message: "User rejected and removed" });
+  } catch (err) { console.error(err); res.status(500).json({ message: "Server error" }); }
+});
+
+app.delete("/api/users/:id", async (req, res) => {
+  try {
+    const [result] = await db.query("DELETE FROM users WHERE user_id = ?", [req.params.id]);
+    if (!result.affectedRows) return res.status(404).json({ message: "User not found" });
+    res.json({ message: "User deleted" });
+  } catch (err) { console.error(err); res.status(500).json({ message: "Server error" }); }
+});
+
+// ===============================
+// STUDENT CREDITS
+// ===============================
+app.get("/api/students/:studentId/credits", async (req, res) => {
+  try {
+    const [rows] = await db.query("SELECT total_credits FROM students WHERE student_id = ?", [req.params.studentId]);
     if (!rows.length) return res.status(404).json({ message: "Student not found" });
     res.json({ total_credits: rows[0].total_credits });
   } catch (err) { console.error(err); res.status(500).json({ message: "Server error" }); }
@@ -344,7 +418,6 @@ app.get("/api/students/:studentId/credits", async (req, res) => {
 // ===============================
 // TRAINING
 // ===============================
-
 app.get("/api/training/workflows", async (req, res) => {
   try {
     const [workflows] = await db.query("SELECT * FROM training_workflows ORDER BY created_at ASC");
@@ -355,14 +428,8 @@ app.get("/api/training/workflows", async (req, res) => {
       );
       for (const module of modules) {
         if (module.type === "quiz") {
-          const [questions] = await db.query(
-            "SELECT * FROM training_quiz_questions WHERE module_id = ?",
-            [module.module_id]
-          );
-          module.questions = questions.map((q) => ({
-            ...q,
-            options: typeof q.options === "string" ? JSON.parse(q.options) : q.options,
-          }));
+          const [questions] = await db.query("SELECT * FROM training_quiz_questions WHERE module_id = ?", [module.module_id]);
+          module.questions = questions.map(q => ({ ...q, options: typeof q.options === "string" ? JSON.parse(q.options) : q.options }));
         }
       }
       workflow.modules = modules;
@@ -375,10 +442,7 @@ app.post("/api/training/workflows", async (req, res) => {
   const { title, description } = req.body;
   if (!title) return res.status(400).json({ message: "Title is required" });
   try {
-    const [result] = await db.query(
-      "INSERT INTO training_workflows (title, description) VALUES (?, ?)",
-      [title, description || null]
-    );
+    const [result] = await db.query("INSERT INTO training_workflows (title, description) VALUES (?, ?)", [title, description || null]);
     const [rows] = await db.query("SELECT * FROM training_workflows WHERE workflow_id = ?", [result.insertId]);
     res.status(201).json(rows[0]);
   } catch (err) { console.error(err); res.status(500).json({ message: "Server error" }); }
@@ -442,10 +506,7 @@ app.post("/api/training/progress", async (req, res) => {
   const { user_id, module_id, completed, score } = req.body;
   if (!user_id || !module_id) return res.status(400).json({ message: "Missing required fields" });
   try {
-    const [existing] = await db.query(
-      "SELECT * FROM training_progress WHERE user_id = ? AND module_id = ?",
-      [user_id, module_id]
-    );
+    const [existing] = await db.query("SELECT * FROM training_progress WHERE user_id = ? AND module_id = ?", [user_id, module_id]);
     if (existing.length) {
       await db.query(
         "UPDATE training_progress SET completed=?, score=?, completed_at=? WHERE user_id=? AND module_id=?",
@@ -465,16 +526,10 @@ app.post("/api/training/seed", async (req, res) => {
   try {
     const [existing] = await db.query("SELECT * FROM training_workflows LIMIT 1");
     if (existing.length) return res.json({ message: "Already seeded" });
-
-    const [w1] = await db.query(
-      "INSERT INTO training_workflows (title, description) VALUES (?, ?)",
-      ["New Researcher Onboarding", "Essential training for new research assistants and principal investigators"]
-    );
-    const [w2] = await db.query(
-      "INSERT INTO training_workflows (title, description) VALUES (?, ?)",
-      ["Data Management & Privacy", "Learn best practices for handling participant data securely"]
-    );
-
+    const [w1] = await db.query("INSERT INTO training_workflows (title, description) VALUES (?, ?)",
+      ["New Researcher Onboarding", "Essential training for new research assistants and principal investigators"]);
+    const [w2] = await db.query("INSERT INTO training_workflows (title, description) VALUES (?, ?)",
+      ["Data Management & Privacy", "Learn best practices for handling participant data securely"]);
     const [m1] = await db.query(
       "INSERT INTO training_modules (workflow_id, title, description, type, content, order_index) VALUES (?, ?, ?, ?, ?, ?)",
       [w1.insertId, "Introduction to BICA", "Overview of the BICA system and its features", "guide",
@@ -483,35 +538,26 @@ app.post("/api/training/seed", async (req, res) => {
     const [m2] = await db.query(
       "INSERT INTO training_modules (workflow_id, title, description, type, content, order_index) VALUES (?, ?, ?, ?, ?, ?)",
       [w1.insertId, "Creating Your First Study", "Step-by-step guide to setting up a research study", "guide",
-        "How to Create a Study\n\n1. Navigate to Create Study from the dashboard.\n2. Fill in the study title, proctor name, and department.\n3. Select the study type: Online, In-Person, or Hybrid.\n4. Choose the duration and credit value.\n5. Select the building and enter the room number.\n6. Add a description and eligibility criteria.\n7. Click Create Study.\n\nOnce created, your study will appear in the Study Approval queue with a Draft status. An admin will review and approve it before it becomes active.", 1]
+        "How to Create a Study\n\n1. Navigate to Create Study from the dashboard.\n2. Fill in the study title, proctor name, and department.\n3. Select the study type: Online, In-Person, or Hybrid.\n4. Choose the duration and credit value.\n5. Select the building and enter the room number.\n6. Add a description and eligibility criteria.\n7. Click Create Study.\n\nOnce created, your study will appear in the Study Approval queue with a Draft status.", 1]
     );
     const [m3] = await db.query(
       "INSERT INTO training_modules (workflow_id, title, description, type, content, order_index) VALUES (?, ?, ?, ?, ?, ?)",
       [w1.insertId, "Knowledge Check: Basics", "Test your understanding of core concepts", "quiz", null, 2]
     );
-
-    await db.query(
-      "INSERT INTO training_quiz_questions (module_id, question, type, options, correct_answer) VALUES (?, ?, ?, ?, ?)",
+    await db.query("INSERT INTO training_quiz_questions (module_id, question, type, options, correct_answer) VALUES (?, ?, ?, ?, ?)",
       [m3.insertId, "What status does a study have when first created?", "multiple_choice",
-        JSON.stringify(["Active", "Draft", "Closed", "Pending"]), "Draft"]
-    );
-    await db.query(
-      "INSERT INTO training_quiz_questions (module_id, question, type, options, correct_answer) VALUES (?, ?, ?, ?, ?)",
+        JSON.stringify(["Active", "Draft", "Closed", "Pending"]), "Draft"]);
+    await db.query("INSERT INTO training_quiz_questions (module_id, question, type, options, correct_answer) VALUES (?, ?, ?, ?, ?)",
       [m3.insertId, "Admins can approve or reject studies from the Study Approval page.", "true_false",
-        JSON.stringify(["True", "False"]), "True"]
-    );
-
+        JSON.stringify(["True", "False"]), "True"]);
     const [m4] = await db.query(
       "INSERT INTO training_modules (workflow_id, title, description, type, content, order_index) VALUES (?, ?, ?, ?, ?, ?)",
       [w2.insertId, "GDPR & Privacy Regulations", "Understanding data protection requirements", "guide",
-        "Data Privacy Guidelines\n\nAll research data must be handled in accordance with GDPR and institutional privacy policies.\n\nKey Rules:\n- Never share participant personal data outside the research team.\n- All data must be stored securely and encrypted where possible.\n- Participants must provide informed consent before data collection.\n- Data should only be retained for as long as necessary.\n\nYour Responsibilities:\n1. Ensure all study participants have signed consent forms.\n2. Do not store participant data on personal devices.\n3. Report any data breaches immediately to the admin team.", 0]
+        "Data Privacy Guidelines\n\nAll research data must be handled in accordance with GDPR and institutional privacy policies.\n\nKey Rules:\n- Never share participant personal data outside the research team.\n- All data must be stored securely and encrypted where possible.\n- Participants must provide informed consent before data collection.\n- Data should only be retained for as long as necessary.", 0]
     );
-    await db.query(
-      "INSERT INTO training_quiz_questions (module_id, question, type, options, correct_answer) VALUES (?, ?, ?, ?, ?)",
+    await db.query("INSERT INTO training_quiz_questions (module_id, question, type, options, correct_answer) VALUES (?, ?, ?, ?, ?)",
       [m4.insertId, "Participant data can be shared freely with other departments.", "true_false",
-        JSON.stringify(["True", "False"]), "False"]
-    );
-
+        JSON.stringify(["True", "False"]), "False"]);
     res.json({ message: "Seeded successfully" });
   } catch (err) { console.error(err); res.status(500).json({ message: "Server error" }); }
 });
