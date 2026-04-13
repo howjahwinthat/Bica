@@ -24,6 +24,7 @@ export default function StudentDashboard() {
   const [studies, setStudies] = useState<Study[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [credits, setCredits] = useState<number>(0); // FIX: added credits state
 
   useEffect(() => {
     if (!user || user.role !== 'student') navigate('/student/login');
@@ -43,6 +44,20 @@ export default function StudentDashboard() {
     };
     fetchStudies();
   }, []);
+
+  // FIX: fetch real credits from the backend
+  useEffect(() => {
+    const fetchCredits = async () => {
+      try {
+        const res = await fetch(`http://localhost:3600/api/students/${user?.id}/credits`);
+        const data = await res.json();
+        setCredits(data.total_credits ?? 0);
+      } catch (err) {
+        console.error('Failed to load credits', err);
+      }
+    };
+    if (user) fetchCredits();
+  }, [user]);
 
   if (!user || user.role !== 'student') return null;
 
@@ -116,7 +131,8 @@ export default function StudentDashboard() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#6B7280' }}>Credits Earned</p>
-                <p className="text-3xl font-bold mt-1" style={{ color: '#003580' }}>0</p>
+                {/* FIX: display real credits instead of hardcoded 0 */}
+                <p className="text-3xl font-bold mt-1" style={{ color: '#003580' }}>{credits}</p>
               </div>
               <div className="w-12 h-12 rounded-full flex items-center justify-center" style={{ backgroundColor: '#EBF0FA' }}>
                 <Award className="w-6 h-6" style={{ color: '#003580' }} />
@@ -206,12 +222,8 @@ export default function StudentDashboard() {
                     <p className="text-gray-500 text-sm mb-3 line-clamp-2">{study.description}</p>
                   )}
                   <div className="flex flex-wrap gap-4 text-sm text-gray-500">
-                    {study.duration && (
-                      <span>⏱ {study.duration} min</span>
-                    )}
-                    {study.building && (
-                      <span>📍 {study.building} {study.room_number}</span>
-                    )}
+                    {study.duration && <span>⏱ {study.duration} min</span>}
+                    {study.building && <span>📍 {study.building} {study.room_number}</span>}
                     {study.credit_value && (
                       <span>🎓 {study.credit_value} {Number(study.credit_value) === 1 ? 'Credit' : 'Credits'}</span>
                     )}
