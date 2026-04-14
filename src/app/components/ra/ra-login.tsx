@@ -2,8 +2,6 @@ import { useForm } from "react-hook-form";
 import { useNavigate, Link } from "react-router-dom";
 import { toast } from "sonner";
 import { useAuth } from "@/app/context/AuthContext";
-import { Clock } from "lucide-react";
-import { ArrowLeft } from "lucide-react";
 import { FlaskConical, Mail, Lock, Loader2 } from "lucide-react";
 import { useState } from "react";
 
@@ -16,28 +14,30 @@ export function RALogin() {
   const navigate = useNavigate();
   const { login } = useAuth();
   const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null); // FIX: added error state
   const { register, handleSubmit, formState: { errors } } = useForm<LoginForm>();
 
   const onSubmit = async (data: LoginForm) => {
     setLoading(true);
+    setErrorMessage(null); // FIX: clear previous error on new attempt
     try {
       const res = await fetch("http://localhost:3600/api/ra/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
-
-      const result = await res.json();
-
       if (!res.ok) {
-        throw new Error(result.message);
+        const err = await res.json();
+        throw new Error(err.message);
       }
-
+      const result = await res.json();
       login(result.user, result.token);
       toast.success("Welcome back!");
       navigate("/ra/dashboard");
     } catch (err: any) {
-      toast.error(err.message || "Login failed");
+      const message = err.message || "Login failed";
+      setErrorMessage(message); // FIX: set error message to show in banner
+      toast.error(message);
     } finally {
       setLoading(false);
     }
@@ -93,37 +93,18 @@ export function RALogin() {
               ← Back to Home
             </Link>
           </div>
-          <div>
-            <Label>Password *</Label>
-            <Input type="password" {...register("password", { required: "Password is required" })} />
-            {errors.password && <p className="text-red-600 text-sm mt-1">{errors.password.message}</p>}
-          </div>
-          <Button type="submit" className="w-full">Log In</Button>
-        </form>
-
-        {/* Pending approval info box — always visible so RAs know what to expect */}
-        <div className="mt-6 rounded-lg border border-yellow-200 bg-yellow-50 p-4 flex gap-3">
-          <Clock className="w-5 h-5 text-yellow-500 shrink-0 mt-0.5" />
-          <div>
-            <p className="text-sm font-semibold text-yellow-800">Account pending approval?</p>
-            <p className="text-sm text-yellow-700 mt-0.5">
-              New RA accounts require admin approval before you can log in. If you have been waiting,
-              please contact your administrator to get your account activated.
-            </p>
-          </div>
-        </div>
-
-        <p className="text-center text-sm text-gray-500 mt-4">
-          Don't have an account?{" "}
-          <Link to="/ra/signup" className="text-blue-600 hover:underline">Sign up</Link>
-        </p>
-      </Card>
-
 
           <div className="mb-8">
             <h1 className="text-3xl font-bold mb-2" style={{ color: '#003580' }}>Researcher Login</h1>
             <p className="text-gray-500">Sign in to your researcher account.</p>
           </div>
+
+          {/* FIX: error banner shown when login fails */}
+          {errorMessage && (
+            <div className="mb-5 p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm font-medium">
+              {errorMessage}
+            </div>
+          )}
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
             <div>
@@ -167,7 +148,6 @@ export function RALogin() {
           </p>
         </div>
       </div>
->>>>>>> 86c9d792669fec5b901b60bd060a1260607ba047
     </div>
   );
 }
