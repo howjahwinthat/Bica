@@ -14,10 +14,12 @@ export function RALogin() {
   const navigate = useNavigate();
   const { login } = useAuth();
   const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null); // FIX: added error state
   const { register, handleSubmit, formState: { errors } } = useForm<LoginForm>();
 
   const onSubmit = async (data: LoginForm) => {
     setLoading(true);
+    setErrorMessage(null); // FIX: clear previous error on new attempt
     try {
       const res = await fetch("http://localhost:3600/api/ra/login", {
         method: "POST",
@@ -33,7 +35,9 @@ export function RALogin() {
       toast.success("Welcome back!");
       navigate("/ra/dashboard");
     } catch (err: any) {
-      toast.error(err.message || "Login failed");
+      const message = err.message || "Login failed";
+      setErrorMessage(message); // FIX: set error message to show in banner
+      toast.error(message);
     } finally {
       setLoading(false);
     }
@@ -94,6 +98,13 @@ export function RALogin() {
             <h1 className="text-3xl font-bold mb-2" style={{ color: '#003580' }}>Researcher Login</h1>
             <p className="text-gray-500">Sign in to your researcher account.</p>
           </div>
+
+          {/* FIX: error banner shown when login fails */}
+          {errorMessage && (
+            <div className="mb-5 p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm font-medium">
+              {errorMessage}
+            </div>
+          )}
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
             <div>
