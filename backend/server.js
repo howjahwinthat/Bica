@@ -78,9 +78,11 @@ app.post("/api/auth/login", async (req, res) => {
   } catch (err) { console.error(err); res.status(500).json({ message: "Server error" }); }
 });
 
-// ===============================
 // RA AUTH
+<<<<<<< HEAD
 // ===============================
+=======
+>>>>>>> 7f18509a4cee030c4a0343963107feef2053e27b
 app.post("/api/ra/signup", async (req, res) => {
   const { first_name, last_name, email, password, department } = req.body;
   if (!first_name || !last_name || !email || !password)
@@ -96,7 +98,11 @@ app.post("/api/ra/signup", async (req, res) => {
     );
     await db.query("INSERT INTO researchers (researcher_id, department) VALUES (?, ?)",
       [result.insertId, department || null]);
+<<<<<<< HEAD
     res.status(201).json({ message: "Account created. Please wait for admin approval before logging in." });
+=======
+    res.status(201).json({ message: "RA account created successfully" });
+>>>>>>> 7f18509a4cee030c4a0343963107feef2053e27b
   } catch (err) { console.error(err); res.status(500).json({ message: "Server error" }); }
 });
 
@@ -201,9 +207,13 @@ app.delete("/api/studies/:id", async (req, res) => {
   } catch (err) { console.error(err); res.status(500).json({ message: "Server error" }); }
 });
 
+<<<<<<< HEAD
 // ===============================
 // SESSIONS
 // ===============================
+=======
+// SESSIONS
+>>>>>>> 7f18509a4cee030c4a0343963107feef2053e27b
 app.get("/api/studies/:id/sessions", async (req, res) => {
   try {
     const [rows] = await db.query(
@@ -238,9 +248,11 @@ app.delete("/api/sessions/:sessionId", async (req, res) => {
   } catch (err) { console.error(err); res.status(500).json({ message: "Server error" }); }
 });
 
-// ===============================
 // SIGNUPS
+<<<<<<< HEAD
 // ===============================
+=======
+>>>>>>> 7f18509a4cee030c4a0343963107feef2053e27b
 app.post("/api/signups", async (req, res) => {
   const { student_id, study_id, session_id } = req.body;
   if (!student_id || !study_id) return res.status(400).json({ message: "Missing required fields" });
@@ -288,6 +300,10 @@ app.get("/api/signups/student/:studentId", async (req, res) => {
   } catch (err) { console.error(err); res.status(500).json({ message: "Server error" }); }
 });
 
+<<<<<<< HEAD
+=======
+// GET student signups for calendar
+>>>>>>> 7f18509a4cee030c4a0343963107feef2053e27b
 app.get("/api/student/:studentId/signups", async (req, res) => {
   try {
     const [rows] = await db.query(
@@ -336,15 +352,20 @@ app.put("/api/signups/:signupId/status", async (req, res) => {
   } catch (err) { console.error(err); res.status(500).json({ message: "Server error" }); }
 });
 
+<<<<<<< HEAD
 // ===============================
 // STATS
 // ===============================
+=======
+// STATS
+>>>>>>> 7f18509a4cee030c4a0343963107feef2053e27b
 app.get("/api/stats", async (req, res) => {
   try {
     const [[{ totalStudies }]] = await db.query("SELECT COUNT(*) as totalStudies FROM studies");
     const [[{ pendingApprovals }]] = await db.query("SELECT COUNT(*) as pendingApprovals FROM studies WHERE status = 'draft'");
     const [[{ totalStudents }]] = await db.query("SELECT COUNT(*) as totalStudents FROM users WHERE role = 'student'");
     const [[{ totalRAs }]] = await db.query("SELECT COUNT(*) as totalRAs FROM users WHERE role = 'researcher'");
+<<<<<<< HEAD
     const [[{ pendingRAs }]] = await db.query("SELECT COUNT(*) as pendingRAs FROM users WHERE role = 'researcher' AND is_approved = 0");
     res.json({ totalStudies, pendingApprovals, totalStudents, totalRAs, pendingRAs });
   } catch (err) { console.error(err); res.status(500).json({ message: "Server error" }); }
@@ -361,6 +382,17 @@ app.get("/api/users", async (req, res) => {
       `SELECT user_id, first_name, last_name, email, role, is_active, is_approved, created_at
        FROM users WHERE role IN ('student', 'researcher')
        ORDER BY created_at DESC`
+=======
+    res.json({ totalStudies, pendingApprovals, totalStudents, totalRAs });
+  } catch (err) { console.error(err); res.status(500).json({ message: "Server error" }); }
+});
+
+// USER MANAGEMENT
+app.get("/api/users", async (req, res) => {
+  try {
+    const [rows] = await db.query(
+      "SELECT user_id, first_name, last_name, email, role, is_active, created_at FROM users WHERE role IN ('student', 'researcher') ORDER BY created_at DESC"
+>>>>>>> 7f18509a4cee030c4a0343963107feef2053e27b
     );
     res.json(rows);
   } catch (err) { console.error(err); res.status(500).json({ message: "Server error" }); }
@@ -374,6 +406,7 @@ app.put("/api/users/:id/toggle", async (req, res) => {
   } catch (err) { console.error(err); res.status(500).json({ message: "Server error" }); }
 });
 
+<<<<<<< HEAD
 // Approve a pending RA
 app.put("/api/users/:id/approve", async (req, res) => {
   try {
@@ -396,6 +429,8 @@ app.delete("/api/users/:id/reject", async (req, res) => {
   } catch (err) { console.error(err); res.status(500).json({ message: "Server error" }); }
 });
 
+=======
+>>>>>>> 7f18509a4cee030c4a0343963107feef2053e27b
 app.delete("/api/users/:id", async (req, res) => {
   try {
     const [result] = await db.query("DELETE FROM users WHERE user_id = ?", [req.params.id]);
@@ -404,9 +439,13 @@ app.delete("/api/users/:id", async (req, res) => {
   } catch (err) { console.error(err); res.status(500).json({ message: "Server error" }); }
 });
 
+<<<<<<< HEAD
 // ===============================
 // STUDENT CREDITS
 // ===============================
+=======
+// STUDENT CREDITS
+>>>>>>> 7f18509a4cee030c4a0343963107feef2053e27b
 app.get("/api/students/:studentId/credits", async (req, res) => {
   try {
     const [rows] = await db.query("SELECT total_credits FROM students WHERE student_id = ?", [req.params.studentId]);
@@ -415,9 +454,11 @@ app.get("/api/students/:studentId/credits", async (req, res) => {
   } catch (err) { console.error(err); res.status(500).json({ message: "Server error" }); }
 });
 
-// ===============================
 // TRAINING
+<<<<<<< HEAD
 // ===============================
+=======
+>>>>>>> 7f18509a4cee030c4a0343963107feef2053e27b
 app.get("/api/training/workflows", async (req, res) => {
   try {
     const [workflows] = await db.query("SELECT * FROM training_workflows ORDER BY created_at ASC");

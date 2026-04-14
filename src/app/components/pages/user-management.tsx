@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Card } from "../ui/card";
 import { Search, Users, GraduationCap, Loader2, Clock, CheckCircle, XCircle } from "lucide-react";
 import { toast } from "sonner";
-
+ 
 type User = {
   user_id: number;
   first_name: string;
@@ -13,18 +13,18 @@ type User = {
   is_approved: number;
   created_at: string;
 };
-
+ 
 type Tab = "student" | "researcher" | "pending";
-
+ 
 export function UserManagement() {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<Tab>("student");
   const [search, setSearch] = useState("");
   const [processingId, setProcessingId] = useState<number | null>(null);
-
+ 
   useEffect(() => { fetchUsers(); }, []);
-
+ 
   const fetchUsers = async () => {
     try {
       const res = await fetch("http://localhost:3600/api/users");
@@ -33,7 +33,7 @@ export function UserManagement() {
     } catch { toast.error("Could not connect to server"); }
     finally { setLoading(false); }
   };
-
+ 
   const handleToggleActive = async (user: User) => {
     setProcessingId(user.user_id);
     const newStatus = user.is_active ? 0 : 1;
@@ -50,7 +50,7 @@ export function UserManagement() {
       toast.error(err.message || "Failed to update user");
     } finally { setProcessingId(null); }
   };
-
+ 
   const handleApprove = async (user: User) => {
     setProcessingId(user.user_id);
     try {
@@ -66,7 +66,7 @@ export function UserManagement() {
       toast.error(err.message || "Failed to approve user");
     } finally { setProcessingId(null); }
   };
-
+ 
   const handleReject = async (user: User) => {
     if (!window.confirm(`Reject and remove ${user.first_name} ${user.last_name}?`)) return;
     setProcessingId(user.user_id);
@@ -81,7 +81,7 @@ export function UserManagement() {
       toast.error(err.message || "Failed to reject user");
     } finally { setProcessingId(null); }
   };
-
+ 
   const handleDelete = async (user: User) => {
     if (!window.confirm(`Delete ${user.first_name} ${user.last_name}?`)) return;
     setProcessingId(user.user_id);
@@ -94,29 +94,28 @@ export function UserManagement() {
       toast.error(err.message || "Failed to delete user");
     } finally { setProcessingId(null); }
   };
-
+ 
   const studentCount = users.filter(u => u.role === "student").length;
   const raCount = users.filter(u => u.role === "researcher" && u.is_approved).length;
   const pendingCount = users.filter(u => u.role === "researcher" && !u.is_approved).length;
-
+ 
   const filteredUsers = users.filter(u => {
     const matchesSearch =
       `${u.first_name} ${u.last_name}`.toLowerCase().includes(search.toLowerCase()) ||
       u.email.toLowerCase().includes(search.toLowerCase());
-
     if (activeTab === "student") return u.role === "student" && matchesSearch;
     if (activeTab === "researcher") return u.role === "researcher" && u.is_approved && matchesSearch;
     if (activeTab === "pending") return u.role === "researcher" && !u.is_approved && matchesSearch;
     return false;
   });
-
+ 
   const tabStyle = (tab: Tab) => ({
     backgroundColor: activeTab === tab ? '#003580' : 'white',
     color: activeTab === tab ? 'white' : '#6B7280',
     boxShadow: activeTab === tab ? '0 2px 8px rgba(0,53,128,0.3)' : 'none',
     border: activeTab !== tab ? '1px solid #E5E7EB' : 'none',
   });
-
+ 
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#F4F6F9' }}>
       <div style={{ background: 'linear-gradient(135deg, #003580 0%, #0047AB 100%)' }} className="px-8 py-8">
@@ -135,7 +134,7 @@ export function UserManagement() {
           </div>
         </div>
       </div>
-
+ 
       <div className="max-w-5xl mx-auto px-8 py-8">
         {/* Tabs */}
         <div className="flex gap-3 mb-6">
@@ -169,7 +168,7 @@ export function UserManagement() {
             )}
           </button>
         </div>
-
+ 
         {/* Search */}
         <div className="relative mb-6">
           <Search className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
@@ -181,7 +180,7 @@ export function UserManagement() {
             className="w-full pl-11 pr-4 py-3 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:ring-2 transition-all"
           />
         </div>
-
+ 
         {/* Users List */}
         <Card className="border-0 shadow-sm overflow-hidden">
           {loading ? (
@@ -214,10 +213,9 @@ export function UserManagement() {
                       </p>
                     </div>
                   </div>
-
+ 
                   <div className="flex items-center gap-3">
                     {activeTab === "pending" ? (
-                      // Pending: show Approve / Reject
                       <>
                         <span className="px-3 py-1 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-700">
                           Awaiting Approval
@@ -242,7 +240,6 @@ export function UserManagement() {
                         </button>
                       </>
                     ) : (
-                      // Active users: show Enable/Disable + Delete
                       <>
                         <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
                           user.is_active ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
