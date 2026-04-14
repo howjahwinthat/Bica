@@ -46,6 +46,8 @@ app.post("/api/student/login", async (req, res) => {
     const [rows] = await db.query("SELECT * FROM users WHERE email = ? AND role = 'student'", [email]);
     if (!rows.length) return res.status(401).json({ message: "Invalid credentials" });
     const user = rows[0];
+    // FIX: added is_active check for students
+    if (user.is_active === 0) return res.status(403).json({ message: "Account is disabled" });
     if (!await bcrypt.compare(password, user.password_hash))
       return res.status(401).json({ message: "Invalid credentials" });
     if (!user.is_active) return res.status(403).json({ message: "Your account has been disabled." });
@@ -78,11 +80,9 @@ app.post("/api/auth/login", async (req, res) => {
   } catch (err) { console.error(err); res.status(500).json({ message: "Server error" }); }
 });
 
-// RA AUTH
-<<<<<<< HEAD
 // ===============================
-=======
->>>>>>> 7f18509a4cee030c4a0343963107feef2053e27b
+// RA AUTH
+// ===============================
 app.post("/api/ra/signup", async (req, res) => {
   const { first_name, last_name, email, password, department } = req.body;
   if (!first_name || !last_name || !email || !password)
@@ -98,11 +98,7 @@ app.post("/api/ra/signup", async (req, res) => {
     );
     await db.query("INSERT INTO researchers (researcher_id, department) VALUES (?, ?)",
       [result.insertId, department || null]);
-<<<<<<< HEAD
     res.status(201).json({ message: "Account created. Please wait for admin approval before logging in." });
-=======
-    res.status(201).json({ message: "RA account created successfully" });
->>>>>>> 7f18509a4cee030c4a0343963107feef2053e27b
   } catch (err) { console.error(err); res.status(500).json({ message: "Server error" }); }
 });
 
@@ -113,6 +109,8 @@ app.post("/api/ra/login", async (req, res) => {
     const [rows] = await db.query("SELECT * FROM users WHERE email = ? AND role = 'researcher'", [email]);
     if (!rows.length) return res.status(401).json({ message: "Invalid credentials" });
     const user = rows[0];
+    // FIX: added is_active check so disabled RAs cannot log in
+    if (user.is_active === 0) return res.status(403).json({ message: "Account is disabled" });
     if (!await bcrypt.compare(password, user.password_hash))
       return res.status(401).json({ message: "Invalid credentials" });
     // Block login until admin approves the account
@@ -146,7 +144,7 @@ app.get("/api/studies/:id", async (req, res) => {
     const [sessions] = await db.query(
       `SELECT s.*, (s.capacity - IFNULL(COUNT(sg.signup_id),0)) AS available_spots
        FROM sessions s
-       LEFT JOIN signups sg ON sg.study_id = s.study_id
+       LEFT JOIN signups sg ON sg.session_id = s.session_id
        WHERE s.study_id = ? GROUP BY s.session_id ORDER BY s.session_date, s.start_time`,
       [req.params.id]
     );
@@ -207,19 +205,15 @@ app.delete("/api/studies/:id", async (req, res) => {
   } catch (err) { console.error(err); res.status(500).json({ message: "Server error" }); }
 });
 
-<<<<<<< HEAD
 // ===============================
 // SESSIONS
 // ===============================
-=======
-// SESSIONS
->>>>>>> 7f18509a4cee030c4a0343963107feef2053e27b
 app.get("/api/studies/:id/sessions", async (req, res) => {
   try {
     const [rows] = await db.query(
       `SELECT s.*, (s.capacity - IFNULL(COUNT(sg.signup_id),0)) AS available_spots
        FROM sessions s
-       LEFT JOIN signups sg ON sg.study_id = s.study_id
+       LEFT JOIN signups sg ON sg.session_id = s.session_id
        WHERE s.study_id = ? GROUP BY s.session_id ORDER BY s.session_date, s.start_time`,
       [req.params.id]
     );
@@ -248,11 +242,9 @@ app.delete("/api/sessions/:sessionId", async (req, res) => {
   } catch (err) { console.error(err); res.status(500).json({ message: "Server error" }); }
 });
 
-// SIGNUPS
-<<<<<<< HEAD
 // ===============================
-=======
->>>>>>> 7f18509a4cee030c4a0343963107feef2053e27b
+// SIGNUPS
+// ===============================
 app.post("/api/signups", async (req, res) => {
   const { student_id, study_id, session_id } = req.body;
   if (!student_id || !study_id) return res.status(400).json({ message: "Missing required fields" });
@@ -262,9 +254,10 @@ app.post("/api/signups", async (req, res) => {
       [student_id, study_id]
     );
     if (existing.length) return res.status(409).json({ message: "Already signed up for this study" });
+    // FIX: now saves session_id so capacity counts correctly per session
     const [result] = await db.query(
-      "INSERT INTO signups (student_id, study_id) VALUES (?, ?)",
-      [student_id, study_id]
+      "INSERT INTO signups (student_id, study_id, session_id) VALUES (?, ?, ?)",
+      [student_id, study_id, session_id || null]
     );
     res.status(201).json({ message: "Signed up successfully", signup_id: result.insertId });
   } catch (err) { console.error(err); res.status(500).json({ message: "Server error" }); }
@@ -300,10 +293,7 @@ app.get("/api/signups/student/:studentId", async (req, res) => {
   } catch (err) { console.error(err); res.status(500).json({ message: "Server error" }); }
 });
 
-<<<<<<< HEAD
-=======
 // GET student signups for calendar
->>>>>>> 7f18509a4cee030c4a0343963107feef2053e27b
 app.get("/api/student/:studentId/signups", async (req, res) => {
   try {
     const [rows] = await db.query(
@@ -352,20 +342,15 @@ app.put("/api/signups/:signupId/status", async (req, res) => {
   } catch (err) { console.error(err); res.status(500).json({ message: "Server error" }); }
 });
 
-<<<<<<< HEAD
 // ===============================
 // STATS
 // ===============================
-=======
-// STATS
->>>>>>> 7f18509a4cee030c4a0343963107feef2053e27b
 app.get("/api/stats", async (req, res) => {
   try {
     const [[{ totalStudies }]] = await db.query("SELECT COUNT(*) as totalStudies FROM studies");
     const [[{ pendingApprovals }]] = await db.query("SELECT COUNT(*) as pendingApprovals FROM studies WHERE status = 'draft'");
     const [[{ totalStudents }]] = await db.query("SELECT COUNT(*) as totalStudents FROM users WHERE role = 'student'");
     const [[{ totalRAs }]] = await db.query("SELECT COUNT(*) as totalRAs FROM users WHERE role = 'researcher'");
-<<<<<<< HEAD
     const [[{ pendingRAs }]] = await db.query("SELECT COUNT(*) as pendingRAs FROM users WHERE role = 'researcher' AND is_approved = 0");
     res.json({ totalStudies, pendingApprovals, totalStudents, totalRAs, pendingRAs });
   } catch (err) { console.error(err); res.status(500).json({ message: "Server error" }); }
@@ -382,17 +367,6 @@ app.get("/api/users", async (req, res) => {
       `SELECT user_id, first_name, last_name, email, role, is_active, is_approved, created_at
        FROM users WHERE role IN ('student', 'researcher')
        ORDER BY created_at DESC`
-=======
-    res.json({ totalStudies, pendingApprovals, totalStudents, totalRAs });
-  } catch (err) { console.error(err); res.status(500).json({ message: "Server error" }); }
-});
-
-// USER MANAGEMENT
-app.get("/api/users", async (req, res) => {
-  try {
-    const [rows] = await db.query(
-      "SELECT user_id, first_name, last_name, email, role, is_active, created_at FROM users WHERE role IN ('student', 'researcher') ORDER BY created_at DESC"
->>>>>>> 7f18509a4cee030c4a0343963107feef2053e27b
     );
     res.json(rows);
   } catch (err) { console.error(err); res.status(500).json({ message: "Server error" }); }
@@ -406,7 +380,6 @@ app.put("/api/users/:id/toggle", async (req, res) => {
   } catch (err) { console.error(err); res.status(500).json({ message: "Server error" }); }
 });
 
-<<<<<<< HEAD
 // Approve a pending RA
 app.put("/api/users/:id/approve", async (req, res) => {
   try {
@@ -429,8 +402,6 @@ app.delete("/api/users/:id/reject", async (req, res) => {
   } catch (err) { console.error(err); res.status(500).json({ message: "Server error" }); }
 });
 
-=======
->>>>>>> 7f18509a4cee030c4a0343963107feef2053e27b
 app.delete("/api/users/:id", async (req, res) => {
   try {
     const [result] = await db.query("DELETE FROM users WHERE user_id = ?", [req.params.id]);
@@ -439,13 +410,9 @@ app.delete("/api/users/:id", async (req, res) => {
   } catch (err) { console.error(err); res.status(500).json({ message: "Server error" }); }
 });
 
-<<<<<<< HEAD
 // ===============================
 // STUDENT CREDITS
 // ===============================
-=======
-// STUDENT CREDITS
->>>>>>> 7f18509a4cee030c4a0343963107feef2053e27b
 app.get("/api/students/:studentId/credits", async (req, res) => {
   try {
     const [rows] = await db.query("SELECT total_credits FROM students WHERE student_id = ?", [req.params.studentId]);
@@ -454,11 +421,9 @@ app.get("/api/students/:studentId/credits", async (req, res) => {
   } catch (err) { console.error(err); res.status(500).json({ message: "Server error" }); }
 });
 
-// TRAINING
-<<<<<<< HEAD
 // ===============================
-=======
->>>>>>> 7f18509a4cee030c4a0343963107feef2053e27b
+// TRAINING
+// ===============================
 app.get("/api/training/workflows", async (req, res) => {
   try {
     const [workflows] = await db.query("SELECT * FROM training_workflows ORDER BY created_at ASC");

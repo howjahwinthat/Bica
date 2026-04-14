@@ -100,11 +100,14 @@ CREATE TABLE `signups` (
   `signup_id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
   `student_id` bigint(20) UNSIGNED NOT NULL,
   `study_id` bigint(20) UNSIGNED NOT NULL,
+  `session_id` bigint(20) UNSIGNED NULL,
   `signed_up_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `status` enum('registered','attended','no_show','cancelled') DEFAULT 'registered',
   PRIMARY KEY (`signup_id`),
+  UNIQUE KEY `unique_session_student` (`session_id`,`student_id`),
   FOREIGN KEY (`student_id`) REFERENCES `users`(`user_id`) ON DELETE CASCADE,
-  FOREIGN KEY (`study_id`) REFERENCES `studies`(`study_id`) ON DELETE CASCADE
+  FOREIGN KEY (`study_id`) REFERENCES `studies`(`study_id`) ON DELETE CASCADE,
+  FOREIGN KEY (`session_id`) REFERENCES `sessions`(`session_id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
