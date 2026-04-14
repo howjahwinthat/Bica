@@ -43,6 +43,8 @@ app.post("/api/student/login", async (req, res) => {
     const [rows] = await db.query("SELECT * FROM users WHERE email = ? AND role = 'student'", [email]);
     if (!rows.length) return res.status(401).json({ message: "Invalid credentials" });
     const user = rows[0];
+    // FIX: added is_active check for students
+    if (user.is_active === 0) return res.status(403).json({ message: "Account is disabled" });
     if (!await bcrypt.compare(password, user.password_hash))
       return res.status(401).json({ message: "Invalid credentials" });
     const token = jwt.sign(
@@ -98,6 +100,8 @@ app.post("/api/ra/login", async (req, res) => {
     const [rows] = await db.query("SELECT * FROM users WHERE email = ? AND role = 'researcher'", [email]);
     if (!rows.length) return res.status(401).json({ message: "Invalid credentials" });
     const user = rows[0];
+    // FIX: added is_active check so disabled RAs cannot log in
+    if (user.is_active === 0) return res.status(403).json({ message: "Account is disabled" });
     if (!await bcrypt.compare(password, user.password_hash))
       return res.status(401).json({ message: "Invalid credentials" });
     const token = jwt.sign(
@@ -124,7 +128,7 @@ app.get("/api/studies/:id", async (req, res) => {
     const [sessions] = await db.query(
       `SELECT s.*, (s.capacity - IFNULL(COUNT(sg.signup_id),0)) AS available_spots
        FROM sessions s
-       LEFT JOIN signups sg ON sg.study_id = s.study_id
+       LEFT JOIN signups sg ON sg.session_id = s.session_id
        WHERE s.study_id = ? GROUP BY s.session_id ORDER BY s.session_date, s.start_time`,
       [req.params.id]
     );
@@ -192,7 +196,7 @@ app.get("/api/studies/:id/sessions", async (req, res) => {
     const [rows] = await db.query(
       `SELECT s.*, (s.capacity - IFNULL(COUNT(sg.signup_id),0)) AS available_spots
        FROM sessions s
-       LEFT JOIN signups sg ON sg.study_id = s.study_id
+       LEFT JOIN signups sg ON sg.session_id = s.session_id
        WHERE s.study_id = ? GROUP BY s.session_id ORDER BY s.session_date, s.start_time`,
       [req.params.id]
     );
@@ -231,9 +235,10 @@ app.post("/api/signups", async (req, res) => {
       [student_id, study_id]
     );
     if (existing.length) return res.status(409).json({ message: "Already signed up for this study" });
+    // FIX: now saves session_id so capacity counts correctly per session
     const [result] = await db.query(
-      "INSERT INTO signups (student_id, study_id) VALUES (?, ?)",
-      [student_id, study_id]
+      "INSERT INTO signups (student_id, study_id, session_id) VALUES (?, ?, ?)",
+      [student_id, study_id, session_id || null]
     );
     res.status(201).json({ message: "Signed up successfully", signup_id: result.insertId });
   } catch (err) { console.error(err); res.status(500).json({ message: "Server error" }); }
