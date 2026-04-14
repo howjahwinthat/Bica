@@ -1,89 +1,84 @@
 import { Link } from "react-router-dom";
+import { useAuth } from "@/app/context/AuthContext";
+import { FileText, Edit3, Settings, Calendar, GraduationCap, Users, LogOut, FlaskConical } from "lucide-react";
 import { Card } from "../ui/card";
-import { Button } from "../ui/button";
-import {
-  FileText,
-  Edit3,
-  Settings,
-  Calendar,
-  GraduationCap,
-  Users,
-} from "lucide-react";
+
+const modules = [
+  { title: "Create Study", description: "Set up a new research study with all required details and time slots", to: "/ra/create-study", icon: FileText, color: '#003580' },
+  { title: "Edit Studies", description: "View, modify, or delete your existing research studies", to: "/ra/edit-study", icon: Edit3, color: '#0047AB' },
+  { title: "Study Rules", description: "Configure eligibility rules and requirements for your studies", to: "/ra/study-rules", icon: Settings, color: '#1565C0' },
+  { title: "Session Management", description: "Open or close study sessions for participant registration", to: "/ra/session-management", icon: Calendar, color: '#003580' },
+  { title: "Training Portal", description: "Complete required training modules and onboarding workflows", to: "/ra/training", icon: GraduationCap, color: '#0047AB' },
+  { title: "My Participants", description: "View students registered for your research studies", to: "/ra/participants", icon: Users, color: '#1565C0' },
+];
 
 export function RADashboard() {
+  const { user, logout } = useAuth();
+
+  const handleLogout = () => {
+    logout();
+    window.location.href = "/";
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50 p-6">
-      <header className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">RA Dashboard</h1>
-        <p className="text-gray-500 mt-1">Research Assistant Portal</p>
+    <div className="min-h-screen" style={{ backgroundColor: '#F4F6F9' }}>
+
+      {/* Header */}
+      <header style={{ backgroundColor: '#003580' }} className="shadow-lg">
+        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: 'rgba(192,192,192,0.3)' }}>
+              <span className="text-white font-bold text-lg">B</span>
+            </div>
+            <div>
+              <span className="text-white font-bold text-xl">BICA+</span>
+              <p className="text-blue-200 text-xs">Researcher Portal</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 px-4 py-2 rounded-full" style={{ backgroundColor: 'rgba(255,255,255,0.1)' }}>
+              <FlaskConical className="w-4 h-4 text-blue-200" />
+              <span className="text-white text-sm font-medium">{user?.name}</span>
+            </div>
+            <button onClick={handleLogout}
+              className="flex items-center gap-2 text-blue-200 hover:text-white transition-colors text-sm">
+              <LogOut className="w-4 h-4" /> Logout
+            </button>
+          </div>
+        </div>
       </header>
 
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <Card className="p-6 flex flex-col items-center hover:shadow-lg transition-shadow">
-          <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-4">
-            <FileText className="w-8 h-8 text-blue-600" />
-          </div>
-          <h2 className="text-xl font-semibold mb-2">Create Study</h2>
-          <p className="text-gray-600 text-center mb-4">Set up a new research study with all required details</p>
-          <Link to="/ra/create-study" className="w-full mt-auto">
-            <Button className="w-full bg-blue-600 hover:bg-blue-700">Create New Study</Button>
-          </Link>
-        </Card>
+      {/* Hero */}
+      <div style={{ background: 'linear-gradient(135deg, #003580 0%, #0047AB 100%)' }} className="px-8 py-10">
+        <div className="max-w-7xl mx-auto">
+          <h1 className="text-3xl font-bold text-white mb-1">Welcome, {user?.name?.split(' ')[0]}!</h1>
+          <p className="text-blue-200">Manage your research studies and participants below.</p>
+        </div>
+      </div>
 
-        <Card className="p-6 flex flex-col items-center hover:shadow-lg transition-shadow">
-          <div className="w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center mb-4">
-            <Edit3 className="w-8 h-8 text-indigo-600" />
-          </div>
-          <h2 className="text-xl font-semibold mb-2">Edit Study</h2>
-          <p className="text-gray-600 text-center mb-4">Modify existing study information and settings</p>
-          <Link to="/ra/edit-study" className="w-full mt-auto">
-            <Button className="w-full bg-indigo-600 hover:bg-indigo-700">Edit Studies</Button>
-          </Link>
-        </Card>
-
-        <Card className="p-6 flex flex-col items-center hover:shadow-lg transition-shadow">
-          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4">
-            <Settings className="w-8 h-8 text-red-600" />
-          </div>
-          <h2 className="text-xl font-semibold mb-2">Study Rules</h2>
-          <p className="text-gray-600 text-center mb-4">Set study-specific rules and requirements</p>
-          <Link to="/ra/study-rules" className="w-full mt-auto">
-            <Button className="w-full bg-red-600 hover:bg-red-700">Configure Rules</Button>
-          </Link>
-        </Card>
-
-        <Card className="p-6 flex flex-col items-center hover:shadow-lg transition-shadow">
-          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
-            <Calendar className="w-8 h-8 text-green-600" />
-          </div>
-          <h2 className="text-xl font-semibold mb-2">Session Management</h2>
-          <p className="text-gray-600 text-center mb-4">Create and manage study session IDs</p>
-          <Link to="/ra/session-management" className="w-full mt-auto">
-            <Button className="w-full bg-green-600 hover:bg-green-700">Manage Sessions</Button>
-          </Link>
-        </Card>
-
-        <Card className="p-6 flex flex-col items-center hover:shadow-lg transition-shadow">
-          <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mb-4">
-            <GraduationCap className="w-8 h-8 text-purple-600" />
-          </div>
-          <h2 className="text-xl font-semibold mb-2">Training Portal</h2>
-          <p className="text-gray-600 text-center mb-4">Access training and onboarding workflows</p>
-          <Link to="/ra/training" className="w-full mt-auto">
-            <Button className="w-full bg-purple-600 hover:bg-purple-700">Start Training</Button>
-          </Link>
-        </Card>
-
-        <Card className="p-6 flex flex-col items-center hover:shadow-lg transition-shadow">
-          <div className="w-16 h-16 bg-teal-100 rounded-full flex items-center justify-center mb-4">
-            <Users className="w-8 h-8 text-teal-600" />
-          </div>
-          <h2 className="text-xl font-semibold mb-2">My Participants</h2>
-          <p className="text-gray-600 text-center mb-4">View students signed up for your studies</p>
-          <Link to="/ra/participants" className="w-full mt-auto">
-            <Button className="w-full bg-teal-600 hover:bg-teal-700">View Participants</Button>
-          </Link>
-        </Card>
+      {/* Module Cards */}
+      <div className="max-w-7xl mx-auto px-8 py-8">
+        <h2 className="text-lg font-bold mb-4" style={{ color: '#003580' }}>Quick Actions</h2>
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
+          {modules.map(mod => {
+            const Icon = mod.icon;
+            return (
+              <Card key={mod.title} className="p-5 border-0 shadow-sm hover:shadow-md transition-all duration-200 bg-white flex flex-col">
+                <div className="w-11 h-11 rounded-xl flex items-center justify-center mb-4" style={{ backgroundColor: '#EBF0FA' }}>
+                  <Icon className="w-5 h-5" style={{ color: mod.color }} />
+                </div>
+                <h3 className="font-bold text-gray-800 mb-1">{mod.title}</h3>
+                <p className="text-gray-400 text-xs leading-relaxed mb-4 flex-1">{mod.description}</p>
+                <Link to={mod.to}>
+                  <button className="w-full py-2 px-4 rounded-lg text-white text-sm font-semibold transition-all hover:opacity-90"
+                    style={{ backgroundColor: mod.color }}>
+                    {mod.title}
+                  </button>
+                </Link>
+              </Card>
+            );
+          })}
+        </div>
       </div>
     </div>
   );
