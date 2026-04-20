@@ -386,4 +386,14 @@ ALTER TABLE `training_quiz_questions`
 ALTER TABLE `training_progress`
   MODIFY `progress_id` int(11) NOT NULL AUTO_INCREMENT;
 
+--Approval
+
+ALTER TABLE users ADD COLUMN is_approved TINYINT(1) DEFAULT 0;
+
+-- Make existing researchers approved so they aren't locked out
+UPDATE users SET is_approved = 1 WHERE role = 'researcher';
+
+-- Admins and students don't need approval
+UPDATE users SET is_approved = 1 WHERE role IN ('admin', 'student');
+
 COMMIT;
