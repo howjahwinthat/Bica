@@ -17,7 +17,9 @@ app.use(express.json());
 
 app.get("/", (req, res) => res.send("Backend is running"));
 
+// ===============================
 // STUDENT AUTH
+// ===============================
 app.post("/api/student/signup", async (req, res) => {
   const { first_name, last_name, email, password, studentId, course } = req.body;
   if (!first_name || !last_name || !email || !password || !studentId || !course)
@@ -27,7 +29,8 @@ app.post("/api/student/signup", async (req, res) => {
     if (existing.length) return res.status(409).json({ message: "Email already registered" });
     const hashed = await bcrypt.hash(password, 10);
     const [result] = await db.query(
-      "INSERT INTO users (role, first_name, last_name, email, password_hash) VALUES ('student', ?, ?, ?, ?)",
+      // Students are auto-approved — no admin approval needed
+      "INSERT INTO users (role, first_name, last_name, email, password_hash, is_approved) VALUES ('student', ?, ?, ?, ?, 1)",
       [first_name, last_name, email, hashed]
     );
     await db.query("INSERT INTO students (student_id, student_number, major) VALUES (?, ?, ?)",
@@ -47,15 +50,18 @@ app.post("/api/student/login", async (req, res) => {
     if (user.is_active === 0) return res.status(403).json({ message: "Account is disabled" });
     if (!await bcrypt.compare(password, user.password_hash))
       return res.status(401).json({ message: "Invalid credentials" });
+    if (!user.is_active) return res.status(403).json({ message: "Your account has been disabled." });
     const token = jwt.sign(
       { id: user.user_id, email: user.email, role: "student", name: `${user.first_name} ${user.last_name}` },
       process.env.JWT_SECRET || "secret", { expiresIn: "7d" }
     );
-    res.json({ user: { id: user.user_id, name: `${user.first_name} ${user.last_name}`, email: user.email, role: "student" }, token });
+    res.json({ user: { id: String(user.user_id), name: `${user.first_name} ${user.last_name}`, email: user.email, role: "student" }, token });
   } catch (err) { console.error(err); res.status(500).json({ message: "Server error" }); }
 });
 
+// ===============================
 // ADMIN AUTH
+// ===============================
 app.post("/api/auth/login", async (req, res) => {
   const { email, password } = req.body;
   if (!email || !password) return res.status(400).json({ message: "Email and password are required" });
@@ -63,18 +69,20 @@ app.post("/api/auth/login", async (req, res) => {
     const [rows] = await db.query("SELECT * FROM users WHERE email = ? AND role = 'admin'", [email]);
     if (!rows.length) return res.status(401).json({ message: "Invalid credentials" });
     const user = rows[0];
-    if (user.is_active === 0) return res.status(403).json({ message: "Account is disabled" });
+    if (!user.is_active) return res.status(403).json({ message: "Account is disabled" });
     if (!await bcrypt.compare(password, user.password_hash))
       return res.status(401).json({ message: "Invalid credentials" });
     const token = jwt.sign(
       { id: user.user_id, email: user.email, role: "admin", name: `${user.first_name} ${user.last_name}` },
       process.env.JWT_SECRET || "secret", { expiresIn: "8h" }
     );
-    res.json({ user: { id: user.user_id, name: `${user.first_name} ${user.last_name}`, email: user.email, role: "admin" }, token });
+    res.json({ user: { id: String(user.user_id), name: `${user.first_name} ${user.last_name}`, email: user.email, role: "admin" }, token });
   } catch (err) { console.error(err); res.status(500).json({ message: "Server error" }); }
 });
 
+// ===============================
 // RA AUTH
+// ===============================
 app.post("/api/ra/signup", async (req, res) => {
   const { first_name, last_name, email, password, department } = req.body;
   if (!first_name || !last_name || !email || !password)
@@ -84,12 +92,13 @@ app.post("/api/ra/signup", async (req, res) => {
     if (existing.length) return res.status(409).json({ message: "Email already registered" });
     const hashed = await bcrypt.hash(password, 10);
     const [result] = await db.query(
-      "INSERT INTO users (role, first_name, last_name, email, password_hash) VALUES ('researcher', ?, ?, ?, ?)",
+      // RAs start as is_approved = 0 — admin must approve before they can log in
+      "INSERT INTO users (role, first_name, last_name, email, password_hash, is_approved) VALUES ('researcher', ?, ?, ?, ?, 0)",
       [first_name, last_name, email, hashed]
     );
     await db.query("INSERT INTO researchers (researcher_id, department) VALUES (?, ?)",
       [result.insertId, department || null]);
-    res.status(201).json({ message: "RA account created successfully" });
+    res.status(201).json({ message: "Account created. Please wait for admin approval before logging in." });
   } catch (err) { console.error(err); res.status(500).json({ message: "Server error" }); }
 });
 
@@ -104,15 +113,22 @@ app.post("/api/ra/login", async (req, res) => {
     if (user.is_active === 0) return res.status(403).json({ message: "Account is disabled" });
     if (!await bcrypt.compare(password, user.password_hash))
       return res.status(401).json({ message: "Invalid credentials" });
+    // Block login until admin approves the account
+    if (!user.is_approved)
+      return res.status(403).json({ message: "Your account is pending admin approval." });
+    if (!user.is_active)
+      return res.status(403).json({ message: "Your account has been disabled." });
     const token = jwt.sign(
       { id: user.user_id, email: user.email, role: "researcher", name: `${user.first_name} ${user.last_name}` },
       process.env.JWT_SECRET || "secret", { expiresIn: "8h" }
     );
-    res.json({ user: { id: user.user_id, name: `${user.first_name} ${user.last_name}`, email: user.email, role: "researcher" }, token });
+    res.json({ user: { id: String(user.user_id), name: `${user.first_name} ${user.last_name}`, email: user.email, role: "researcher" }, token });
   } catch (err) { console.error(err); res.status(500).json({ message: "Server error" }); }
 });
 
+// ===============================
 // STUDIES
+// ===============================
 app.get("/api/studies", async (req, res) => {
   try {
     const [rows] = await db.query("SELECT * FROM studies ORDER BY created_at DESC");
@@ -156,7 +172,6 @@ app.put("/api/studies/:id", async (req, res) => {
     const [current] = await db.query("SELECT * FROM studies WHERE study_id = ?", [req.params.id]);
     if (!current.length) return res.status(404).json({ message: "Study not found" });
     const existing = current[0];
-    const finalStatus = status !== undefined ? status : existing.status;
     await db.query(
       `UPDATE studies SET title=?, description=?, proctor=?, department=?, study_type=?, duration=?, credit_value=?, eligibility_criteria=?, is_active=?, requires_prescreen=?, is_open=?, building=?, room_number=?, status=? WHERE study_id=?`,
       [
@@ -173,7 +188,7 @@ app.put("/api/studies/:id", async (req, res) => {
         is_open !== undefined ? (is_open ? 1 : 0) : existing.is_open,
         building !== undefined ? building : existing.building,
         roomNumber || room_number || existing.room_number,
-        finalStatus,
+        status !== undefined ? status : existing.status,
         req.params.id,
       ]
     );
@@ -190,7 +205,9 @@ app.delete("/api/studies/:id", async (req, res) => {
   } catch (err) { console.error(err); res.status(500).json({ message: "Server error" }); }
 });
 
+// ===============================
 // SESSIONS
+// ===============================
 app.get("/api/studies/:id/sessions", async (req, res) => {
   try {
     const [rows] = await db.query(
@@ -225,7 +242,9 @@ app.delete("/api/sessions/:sessionId", async (req, res) => {
   } catch (err) { console.error(err); res.status(500).json({ message: "Server error" }); }
 });
 
+// ===============================
 // SIGNUPS
+// ===============================
 app.post("/api/signups", async (req, res) => {
   const { student_id, study_id, session_id } = req.body;
   if (!student_id || !study_id) return res.status(400).json({ message: "Missing required fields" });
@@ -323,22 +342,31 @@ app.put("/api/signups/:signupId/status", async (req, res) => {
   } catch (err) { console.error(err); res.status(500).json({ message: "Server error" }); }
 });
 
+// ===============================
 // STATS
+// ===============================
 app.get("/api/stats", async (req, res) => {
   try {
     const [[{ totalStudies }]] = await db.query("SELECT COUNT(*) as totalStudies FROM studies");
     const [[{ pendingApprovals }]] = await db.query("SELECT COUNT(*) as pendingApprovals FROM studies WHERE status = 'draft'");
     const [[{ totalStudents }]] = await db.query("SELECT COUNT(*) as totalStudents FROM users WHERE role = 'student'");
     const [[{ totalRAs }]] = await db.query("SELECT COUNT(*) as totalRAs FROM users WHERE role = 'researcher'");
-    res.json({ totalStudies, pendingApprovals, totalStudents, totalRAs });
+    const [[{ pendingRAs }]] = await db.query("SELECT COUNT(*) as pendingRAs FROM users WHERE role = 'researcher' AND is_approved = 0");
+    res.json({ totalStudies, pendingApprovals, totalStudents, totalRAs, pendingRAs });
   } catch (err) { console.error(err); res.status(500).json({ message: "Server error" }); }
 });
 
+// ===============================
 // USER MANAGEMENT
+// ===============================
+
+// Returns all students and researchers, including is_approved for pending tab
 app.get("/api/users", async (req, res) => {
   try {
     const [rows] = await db.query(
-      "SELECT user_id, first_name, last_name, email, role, is_active, created_at FROM users WHERE role IN ('student', 'researcher') ORDER BY created_at DESC"
+      `SELECT user_id, first_name, last_name, email, role, is_active, is_approved, created_at
+       FROM users WHERE role IN ('student', 'researcher')
+       ORDER BY created_at DESC`
     );
     res.json(rows);
   } catch (err) { console.error(err); res.status(500).json({ message: "Server error" }); }
@@ -352,6 +380,28 @@ app.put("/api/users/:id/toggle", async (req, res) => {
   } catch (err) { console.error(err); res.status(500).json({ message: "Server error" }); }
 });
 
+// Approve a pending RA
+app.put("/api/users/:id/approve", async (req, res) => {
+  try {
+    await db.query(
+      "UPDATE users SET is_approved = 1, is_active = 1 WHERE user_id = ? AND role = 'researcher'",
+      [req.params.id]
+    );
+    res.json({ message: "User approved" });
+  } catch (err) { console.error(err); res.status(500).json({ message: "Server error" }); }
+});
+
+// Reject a pending RA (removes them entirely)
+app.delete("/api/users/:id/reject", async (req, res) => {
+  try {
+    await db.query(
+      "DELETE FROM users WHERE user_id = ? AND role = 'researcher' AND is_approved = 0",
+      [req.params.id]
+    );
+    res.json({ message: "User rejected and removed" });
+  } catch (err) { console.error(err); res.status(500).json({ message: "Server error" }); }
+});
+
 app.delete("/api/users/:id", async (req, res) => {
   try {
     const [result] = await db.query("DELETE FROM users WHERE user_id = ?", [req.params.id]);
@@ -360,7 +410,9 @@ app.delete("/api/users/:id", async (req, res) => {
   } catch (err) { console.error(err); res.status(500).json({ message: "Server error" }); }
 });
 
+// ===============================
 // STUDENT CREDITS
+// ===============================
 app.get("/api/students/:studentId/credits", async (req, res) => {
   try {
     const [rows] = await db.query("SELECT total_credits FROM students WHERE student_id = ?", [req.params.studentId]);
@@ -369,7 +421,9 @@ app.get("/api/students/:studentId/credits", async (req, res) => {
   } catch (err) { console.error(err); res.status(500).json({ message: "Server error" }); }
 });
 
+// ===============================
 // TRAINING
+// ===============================
 app.get("/api/training/workflows", async (req, res) => {
   try {
     const [workflows] = await db.query("SELECT * FROM training_workflows ORDER BY created_at ASC");

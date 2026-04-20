@@ -19,6 +19,13 @@ export default function StudentSignup() {
     e.preventDefault();
     setLoading(true);
     setError('');
+
+    if (!formData.email.toLowerCase().endsWith('@cnu.edu')) {
+      setError('You must use your CNU email address (e.g. jane.doe.23@cnu.edu)');
+      setLoading(false);
+      return;
+    }
+
     try {
       const res = await fetch('http://localhost:3600/api/student/signup', {
         method: 'POST',
@@ -129,11 +136,12 @@ export default function StudentSignup() {
                   type="email"
                   value={formData.email}
                   onChange={e => setFormData({ ...formData, email: e.target.value })}
-                  placeholder="student@university.edu"
+                  placeholder="jane.doe.23@cnu.edu"
                   required
                   className="w-full pl-11 pr-4 py-3 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:ring-2 transition-all"
                 />
               </div>
+              <p className="text-xs text-gray-400 mt-1">Must be a CNU email (e.g. jane.doe.23@cnu.edu)</p>
             </div>
 
             <div>
@@ -150,17 +158,22 @@ export default function StudentSignup() {
               </div>
             </div>
 
+            {/* FIX: replaced text input with dropdown for Course / Major */}
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">Course / Major</label>
               <div className="relative">
                 <BookOpen className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
-                <input
+                <select
                   value={formData.course}
                   onChange={e => setFormData({ ...formData, course: e.target.value })}
-                  placeholder="e.g. Psychology"
                   required
-                  className="w-full pl-11 pr-4 py-3 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:ring-2 transition-all"
-                />
+                  className="w-full pl-11 pr-4 py-3 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:ring-2 transition-all appearance-none"
+                >
+                  <option value="">Select your major...</option>
+                  <option value="Psychology">Psychology</option>
+                  <option value="Computer Science">Computer Science</option>
+                  <option value="Cybersecurity">Cybersecurity</option>
+                </select>
               </div>
             </div>
 
