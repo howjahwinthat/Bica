@@ -9,5 +9,4 @@
 
   Run `npm run dev` to start the development server.
 
-  Run 'npm install express cors dotenv mysql12 bcryptjs jsonwebtoken' to install packages needed.
-  
+  Run `npm install express cors dotenv mysql12 bcryptjs jsonwebtoken` to install packages needed.
