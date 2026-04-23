@@ -1,3 +1,4 @@
+// Responsible Party: Brooke 
 import { RouterProvider } from "react-router";
 import { router } from "./routes";
 import { AuthProvider } from "./context/AuthContext";
