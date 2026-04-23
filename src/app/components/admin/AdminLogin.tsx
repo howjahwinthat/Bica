@@ -1,3 +1,5 @@
+// Responsible Party: Brooke
+// Contributors: Clifford & Ishmel
 import React, { useState } from "react";
 import { useNavigate } from "react-router";
 import { useAuth } from "../../context/AuthContext";
