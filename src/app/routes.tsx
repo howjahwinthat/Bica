@@ -1,3 +1,5 @@
+// Responsible Party: Brooke
+// Contributors: Ishmel & Clifford
 import { createBrowserRouter } from "react-router-dom";
 import { AdminLayout } from "@/app/components/admin-layout";
 import { RALayout } from "@/app/components/ra/ra-layout";
