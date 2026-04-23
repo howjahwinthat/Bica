@@ -1,3 +1,4 @@
+// Responsible Party: Brooke
 // ProtectedRoute.tsx - use isLoading from context
 import { ReactNode } from 'react';
 import { Navigate } from 'react-router-dom';
