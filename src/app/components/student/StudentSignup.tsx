@@ -1,3 +1,5 @@
+// Responsible Party: Brooke
+// Contributors: Ishmel & Clifford
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft, GraduationCap, Mail, Lock, User, BookOpen, Hash, Loader2 } from 'lucide-react';
